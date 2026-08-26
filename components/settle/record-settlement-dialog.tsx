@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { ApiError, groupsApi } from "@/lib/client/api";
+import { useGuestGate } from "@/components/auth/guest-gate";
 
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ export function RecordSettlementDialog({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const { requestWrite } = useGuestGate();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Initialised from props, not synced in an effect: callers remount this with
@@ -50,6 +52,28 @@ export function RecordSettlementDialog({
     payment ? majorString(payment.amountMinor, currency) : "",
   );
   const [date, setDate] = useState(today);
+
+  async function save() {
+    if (!payment) return;
+    setPending(true);
+    setError(null);
+    try {
+      await groupsApi.createSettlement(groupId, {
+        fromMember: payment.fromId,
+        toMember: payment.toId,
+        amountMinor: entered,
+        currency,
+        date,
+      });
+      onClose();
+      // Balances, the plan and the timeline all live in Server Components, so
+      // they have to re-read together.
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong.");
+      setPending(false);
+    }
+  }
 
   const entered = payment ? (parseAmount(amountText, currency) ?? 0) : 0;
   const remaining = (payment?.amountMinor ?? 0) - entered;
@@ -82,32 +106,10 @@ export function RecordSettlementDialog({
       {payment ? (
         <form
           id="record-settlement-form"
-          onSubmit={async (event) => {
+          onSubmit={(event) => {
             event.preventDefault();
-            setPending(true);
-            setError(null);
-            try {
-              await groupsApi.createSettlement(groupId, {
-                fromMember: payment.fromId,
-                toMember: payment.toId,
-                amountMinor: entered,
-                currency,
-                date,
-              });
-              onClose();
-              // Balances, the plan and the timeline all live in Server
-              // Components, so they have to re-read together.
-              router.refresh();
-            } catch (err) {
-              setError(
-                err instanceof ApiError
-                  ? err.requiresAuth
-                    ? "Sign in to record payments in a group of your own."
-                    : err.message
-                  : "Something went wrong.",
-              );
-              setPending(false);
-            }
+            // A guest is stopped here, before any request is made.
+            requestWrite("recording a payment", () => void save());
           }}
         >
           {/* Who paid whom, stated plainly — the thing most easily got backwards. */}

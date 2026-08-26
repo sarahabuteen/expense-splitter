@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { SettlePlan } from "@/components/settle/settle-plan";
+import { SettleRail } from "@/components/settle/settle-rail";
 import { getGroup } from "@/lib/server/groups";
 
 export async function generateMetadata({
@@ -23,7 +24,7 @@ export default async function SettlePage({
   if (!group) notFound();
 
   return (
-    <main className="w-full max-w-3xl flex-1 px-5 py-10 sm:px-7 sm:py-12">
+    <main className="w-full flex-1 px-5 py-8 sm:px-7 sm:py-10">
       <Breadcrumb
         trail={[
           { label: "Groups", href: "/groups" },
@@ -33,13 +34,39 @@ export default async function SettlePage({
       />
 
       <h1 className="mt-4 text-2xl font-extrabold tracking-tight">Settle up</h1>
-      <p className="mt-2 text-sm text-text-secondary">
-        Every figure here comes from the expenses in this group — open any of
-        them to see how it was worked out.
+      <p className="mt-1.5 text-sm text-text-secondary">
+        Every figure comes from the expenses in {group.name} — open any of them
+        to see how it was worked out.
       </p>
 
-      <div className="mt-8">
-        <SettlePlan group={group} />
+      {/* The same meta line the dashboard uses, so the two pages read as one
+          product rather than two. */}
+      <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-3 border-y border-border py-3.5 text-sm">
+        <span className="flex items-baseline gap-2">
+          <span className="tabular font-mono font-semibold">
+            {group.planCounts.simplified}
+          </span>
+          <span className="text-xs text-text-secondary">payments to make</span>
+        </span>
+        <span className="flex items-baseline gap-2">
+          <span className="tabular font-mono font-semibold">
+            {group.members.length}
+          </span>
+          <span className="text-xs text-text-secondary">
+            people, settling in {group.currency}
+          </span>
+        </span>
+      </div>
+
+      {/* The same two-column grid as the dashboard: the plan flexes, the rail
+          is fixed, and together they fill the pane instead of leaving a gap. */}
+      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_var(--container-detail)]">
+        <div>
+          <SettlePlan group={group} />
+        </div>
+        <aside className="lg:sticky lg:top-6 lg:self-start">
+          <SettleRail group={group} />
+        </aside>
       </div>
     </main>
   );

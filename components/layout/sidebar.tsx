@@ -4,9 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Logo } from "@/components/brand/logo";
-import { ThemeToggle } from "./theme-toggle";
+import { AccountMenu } from "./account-menu";
 import { useNewGroup } from "@/components/groups/new-group-dialog";
 import { formatMoney, formatSignedMoney } from "@/lib/format";
+import type { Account } from "@/lib/server/account";
 import type { GroupSummary } from "@/lib/types";
 
 /**
@@ -16,7 +17,13 @@ import type { GroupSummary } from "@/lib/types";
  * answered without navigating — which is the question people actually open the
  * app to ask.
  */
-export function Sidebar({ groups }: { groups: GroupSummary[] }) {
+export function Sidebar({
+  groups,
+  account,
+}: {
+  groups: GroupSummary[];
+  account: Account | null;
+}) {
   const pathname = usePathname();
   const { open } = useNewGroup();
 
@@ -33,9 +40,19 @@ export function Sidebar({ groups }: { groups: GroupSummary[] }) {
       </Link>
 
       <nav aria-label="Groups" className="min-h-0 flex-1 overflow-y-auto px-3">
-        <h2 className="px-2 pb-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">
-          Groups
-        </h2>
+        <div className="flex items-center justify-between gap-2 pb-2 pe-1.5 ps-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
+            Groups
+          </h2>
+          <button
+            type="button"
+            onClick={open}
+            className="-me-1.5 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium text-text-secondary transition-colors hover:bg-bg-tertiary hover:text-text-primary"
+          >
+            <PlusIcon />
+            Add
+          </button>
+        </div>
         {groups.length === 0 ? (
           /* An empty rail is just a void. Ghost rows show where groups will
              land, in the same dashed language as the main empty state. */
@@ -103,22 +120,20 @@ export function Sidebar({ groups }: { groups: GroupSummary[] }) {
       </nav>
 
       <div className="border-t border-border px-3 py-3">
-        <button
-          type="button"
-          onClick={open}
-          className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-            groups.length === 0
-              ? "justify-center bg-accent text-white hover:bg-accent-hover"
-              : "text-text-secondary hover:bg-bg-tertiary hover:text-text-primary"
-          }`}
-        >
-          <PlusIcon />
-          New group
-        </button>
-        <div className="mt-2 flex items-center justify-between px-3 py-1">
-          <span className="text-xs text-text-secondary">Theme</span>
-          <ThemeToggle />
-        </div>
+        {/* Empty rail: creating is the only useful action, so it stays a full
+            button here as well as the "+" above. */}
+        {groups.length === 0 ? (
+          <button
+            type="button"
+            onClick={open}
+            className="mb-2 flex w-full items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
+          >
+            <PlusIcon />
+            New group
+          </button>
+        ) : null}
+
+        <AccountMenu account={account} />
       </div>
     </div>
   );
@@ -129,10 +144,10 @@ function PlusIcon() {
     <svg
       viewBox="0 0 24 24"
       aria-hidden="true"
-      className="size-4"
+      className="size-3.5"
       fill="none"
       stroke="currentColor"
-      strokeWidth={2}
+      strokeWidth={2.2}
       strokeLinecap="round"
     >
       <path d="M12 5v14M5 12h14" />

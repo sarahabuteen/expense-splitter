@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useMemo, useState } from "react
 
 import { ApiError, groupsApi } from "@/lib/client/api";
 import { Button } from "@/components/ui/button";
+import { useGuestGate } from "@/components/auth/guest-gate";
 import { Dialog } from "@/components/ui/dialog";
 import { CurrencyCombobox } from "@/components/ui/currency-combobox";
 import { MemberChipsInput, type Chip } from "./member-chips-input";
@@ -37,7 +38,12 @@ export function useNewGroup(): NewGroupContext {
 
 export function NewGroupProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-  const open = useCallback(() => setIsOpen(true), []);
+  const { requestWrite } = useGuestGate();
+  // A guest never even reaches the form — the prompt is what stops them.
+  const open = useCallback(
+    () => requestWrite("creating a group", () => setIsOpen(true)),
+    [requestWrite],
+  );
   // Memoised: the React Compiler lint rejects a context value rebuilt each render.
   const value = useMemo(() => ({ open }), [open]);
 

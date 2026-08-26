@@ -43,98 +43,113 @@ export function SettlePlan({ group }: { group: GroupDetail }) {
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-text-secondary">
-          {payments.length} payment{payments.length === 1 ? "" : "s"} to square
-          everyone up
-        </p>
+      {/* Panel with a titled header bar, matching the settings panels and the
+          activity list — the same structure the rest of the app uses. */}
+      <div className="overflow-hidden rounded-lg border border-border bg-surface">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-bg-tertiary/40 px-6 py-4">
+          <div>
+            <h2 className="text-sm font-semibold">
+              {simplified ? "Suggested payments" : "Original debts"}
+            </h2>
+            <p className="mt-0.5 text-xs text-text-secondary">
+              {payments.length} payment{payments.length === 1 ? "" : "s"} to
+              square everyone up
+            </p>
+          </div>
 
-        {/* Labelled by its benefit, not by its mechanism. */}
-        {simpleCount < directCount ? (
-          <button
-            type="button"
-            onClick={() => setSimplified((v) => !v)}
-            aria-pressed={simplified}
-            className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs transition-colors ${
-              simplified
-                ? "border-accent bg-accent-subtle font-medium text-text-primary"
-                : "border-border text-text-secondary hover:border-accent hover:text-text-primary"
-            }`}
-          >
-            {simplified
-              ? `Showing ${simpleCount} of ${directCount} — see the original debts`
-              : `Back to ${simpleCount} payments instead of ${directCount}`}
-          </button>
-        ) : null}
-      </div>
-
-      <p className="mt-3 rounded-md border border-border bg-bg-primary px-3 py-2 text-xs leading-relaxed text-text-secondary">
-        {simplified ? (
-          <>
-            The same balances settled in fewer steps, so some payments are
-            between people who didn&rsquo;t share an expense directly. Everyone
-            ends up square either way.
-          </>
-        ) : (
-          <>
-            The debts exactly as they arose, expense by expense. Some cancel each
-            other out in a circle, which is why the simplified plan needs fewer
-            payments — and why someone already square can appear here.
-          </>
-        )}
-      </p>
-
-      <ul className="mt-4 flex flex-col gap-2">
-        {payments.map((payment) => {
-          const youPay = payment.from === viewerName;
-          const youReceive = payment.to === viewerName;
-          const yours = youPay || youReceive;
-          // Kept visible rather than dropped: without it the balances never
-          // reach zero. Marked so nobody thinks they are being chased for it.
-          const residue = payment.amountMinor < SUGGESTION_THRESHOLD_MINOR;
-
-          return (
-            <li
-              key={`${payment.fromId}-${payment.toId}`}
-              className={`flex flex-wrap items-center gap-3 rounded-lg border bg-surface px-4 py-3 ${
-                yours ? "border-accent/40" : "border-border"
+          {/* Labelled by its benefit, not by its mechanism. */}
+          {simpleCount < directCount ? (
+            <button
+              type="button"
+              onClick={() => setSimplified((v) => !v)}
+              aria-pressed={simplified}
+              className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs transition-colors ${
+                simplified
+                  ? "border-border bg-surface text-text-secondary hover:border-accent hover:text-text-primary"
+                  : "border-accent bg-accent-subtle font-medium text-text-primary"
               }`}
             >
-              <Avatar name={payment.from} color={payment.fromColor} size="sm" />
-              <span className="min-w-0 flex-1 text-sm">
-                <span className="font-medium">{youPay ? "You" : payment.from}</span>
-                <span className="text-text-secondary">
-                  {youPay ? " pay " : " pays "}
-                </span>
-                <span className="font-medium">{youReceive ? "you" : payment.to}</span>
-              </span>
+              {simplified
+                ? `See the original ${directCount}`
+                : `Back to ${simpleCount} payments`}
+            </button>
+          ) : null}
+        </div>
 
-              <span
-                className={`tabular shrink-0 font-mono text-sm font-semibold ${
-                  youReceive ? "text-owed" : youPay ? "text-owe" : ""
+        <p className="border-b border-border-subtle px-6 py-3 text-xs leading-relaxed text-text-secondary">
+          {simplified ? (
+            <>
+              The same balances settled in fewer steps, so some payments are
+              between people who didn&rsquo;t share an expense directly. Everyone
+              ends up square either way.
+            </>
+          ) : (
+            <>
+              The debts exactly as they arose, expense by expense. Some cancel
+              each other out in a circle, which is why the simplified plan needs
+              fewer payments — and why someone already square can appear here.
+            </>
+          )}
+        </p>
+
+        <ul>
+          {payments.map((payment) => {
+            const youPay = payment.from === viewerName;
+            const youReceive = payment.to === viewerName;
+            const yours = youPay || youReceive;
+            // Kept visible rather than dropped: without it the balances never
+            // reach zero. Marked so nobody thinks they are being chased for it.
+            const residue = payment.amountMinor < SUGGESTION_THRESHOLD_MINOR;
+
+            return (
+              <li
+                key={`${payment.fromId}-${payment.toId}`}
+                // One container with hairline dividers — the same list language
+                // as the activity timeline and the member list.
+                className={`flex flex-wrap items-center gap-3 border-b border-border-subtle px-6 py-3.5 last:border-b-0 ${
+                  yours ? "bg-accent-subtle/40" : ""
                 }`}
               >
-                {formatMoney(payment.amountMinor, group.currency)}
-              </span>
-
-              {residue ? (
-                <span className="shrink-0 rounded-full bg-bg-tertiary px-2 py-0.5 text-[0.625rem] text-text-tertiary">
-                  rounding
+                <Avatar name={payment.from} color={payment.fromColor} size="sm" />
+                <span className="min-w-0 flex-1 text-sm">
+                  <span className="font-medium">
+                    {youPay ? "You" : payment.from}
+                  </span>
+                  <span className="text-text-secondary">
+                    {youPay ? " pay " : " pays "}
+                  </span>
+                  <span className="font-medium">
+                    {youReceive ? "you" : payment.to}
+                  </span>
                 </span>
-              ) : null}
 
-              <Button
-                type="button"
-                variant={yours && !residue ? "primary" : "secondary"}
-                onClick={() => setRecording(payment)}
-                className="h-9 shrink-0 px-3 text-xs"
-              >
-                Record
-              </Button>
-            </li>
-          );
-        })}
-      </ul>
+                <span
+                  className={`tabular shrink-0 font-mono text-sm font-semibold ${
+                    youReceive ? "text-owed" : youPay ? "text-owe" : ""
+                  }`}
+                >
+                  {formatMoney(payment.amountMinor, group.currency)}
+                </span>
+
+                {residue ? (
+                  <span className="shrink-0 rounded-full bg-bg-tertiary px-2 py-0.5 text-[0.625rem] text-text-tertiary">
+                    rounding
+                  </span>
+                ) : null}
+
+                <Button
+                  type="button"
+                  variant={yours && !residue ? "primary" : "secondary"}
+                  onClick={() => setRecording(payment)}
+                  className="h-9 shrink-0 px-3 text-xs"
+                >
+                  Record
+                </Button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
 
       <RecordSettlementDialog
         key={recording ? `${recording.fromId}-${recording.toId}` : "idle"}

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { ApiError, groupsApi } from "@/lib/client/api";
+import { useGuestGate } from "@/components/auth/guest-gate";
 import { Button } from "@/components/ui/button";
 import { TrashIcon } from "@/components/ui/trash-icon";
 
@@ -67,11 +68,19 @@ export function ActivityRowItem({
   onEdit: (expense: EditableExpense) => void;
 }) {
   const router = useRouter();
+  const { requestWrite } = useGuestGate();
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function remove() {
+  function remove() {
+    requestWrite(
+      row.kind === "expense" ? "deleting an expense" : "undoing a payment",
+      () => void doRemove(),
+    );
+  }
+
+  async function doRemove() {
     // An expense deletion needs confirming — it destroys a record of something
     // that happened. Undoing a settlement does not: the row just says money
     // moved, so removing it is exact and nothing real needs reversing.
@@ -226,7 +235,8 @@ export function ActivityRowItem({
                   <Button
                     type="button"
                     onClick={() =>
-                      onEdit({
+                      requestWrite("editing an expense", () =>
+                        onEdit({
                         id: row.id,
                         title: row.title,
                         amountMinor: row.amountMinor,
@@ -241,7 +251,8 @@ export function ActivityRowItem({
                           percentage: s.percentage,
                           shares: s.shares,
                         })),
-                      })
+                        }),
+                      )
                     }
                     className="h-8 px-3 text-xs"
                   >

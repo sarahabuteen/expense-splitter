@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { ApiError, groupsApi } from "@/lib/client/api";
+import { useGuestGate } from "@/components/auth/guest-gate";
 
 import { Avatar } from "@/components/ui/avatar";
 import { CategoryIcon } from "@/components/ui/category-icon";
@@ -56,6 +57,7 @@ export function ExpenseComposer({
   onCancelEdit?: () => void;
 }) {
   const router = useRouter();
+  const { requestWrite, isGuest } = useGuestGate();
   const viewer = members.find((m) => m.isViewer) ?? members[0];
   const [pending, setPending] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -150,6 +152,48 @@ export function ExpenseComposer({
     setSplitType(next);
   }
 
+  async function submit() {
+    const body = {
+      description: description.trim(),
+      amountMinor: totalMinor,
+      currency: expenseCurrency,
+      date,
+      category,
+      paidBy: payerId,
+      splitType,
+      participants,
+      values,
+    };
+
+    setPending(true);
+    setSubmitError(null);
+    try {
+      if (editing) {
+        await groupsApi.updateExpense(groupId, editing.id, body);
+        onCancelEdit?.();
+      } else {
+        await groupsApi.createExpense(groupId, body);
+      }
+      // Reset to the fast-path defaults so the next one is two fields again.
+      setAmountText("");
+      setDescription("");
+      setExpanded(false);
+      setValues({});
+      setSplitType("equal");
+      setParticipants(members.map((m) => m.id));
+      setExpenseCurrency(currency);
+      // Server Components hold the ledger and every balance, so they have to
+      // re-read for the change to appear.
+      router.refresh();
+    } catch (err) {
+      setSubmitError(
+        err instanceof ApiError ? err.message : "Something went wrong.",
+      );
+    } finally {
+      setPending(false);
+    }
+  }
+
   const payer = members.find((m) => m.id === payerId);
   const canSubmit =
     totalMinor > 0 && !amountError && description.trim() !== "" && errors.length === 0;
@@ -176,50 +220,12 @@ export function ExpenseComposer({
       ) : null}
 
       <form
-        onSubmit={async (event) => {
+        onSubmit={(event) => {
           event.preventDefault();
-          setPending(true);
-          setSubmitError(null);
-          const body = {
-            description: description.trim(),
-            amountMinor: totalMinor,
-            currency: expenseCurrency,
-            date,
-            category,
-            paidBy: payerId,
-            splitType,
-            participants,
-            values,
-          };
-          try {
-            if (editing) {
-              await groupsApi.updateExpense(groupId, editing.id, body);
-              onCancelEdit?.();
-            } else {
-              await groupsApi.createExpense(groupId, body);
-            }
-            // Reset to the fast-path defaults so the next one is two fields again.
-            setAmountText("");
-            setDescription("");
-            setExpanded(false);
-            setValues({});
-            setSplitType("equal");
-            setParticipants(members.map((m) => m.id));
-            setExpenseCurrency(currency);
-            // Server Components hold the ledger and every balance, so they
-            // have to re-read for the new expense to appear.
-            router.refresh();
-          } catch (err) {
-            setSubmitError(
-              err instanceof ApiError
-                ? err.requiresAuth
-                  ? "Sign in to change expenses in a group of your own."
-                  : err.message
-                : "Something went wrong.",
-            );
-          } finally {
-            setPending(false);
-          }
+          // A guest is stopped here, before any request is made.
+          requestWrite(editing ? "editing an expense" : "adding an expense", () => {
+            void submit();
+          });
         }}
       >
         {/* The fast path: amount and description, nothing else. */}
@@ -464,6 +470,7 @@ export function ExpenseComposer({
                 onChange={setCategory}
                 categories={categories}
                 onCreate={async (name) => {
+                  if (isGuest) throw new Error("Sign up to add your own categories.");
                   await groupsApi.createCategory(groupId, name);
                   // The category list lives in a Server Component.
                   router.refresh();

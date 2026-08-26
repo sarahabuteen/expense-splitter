@@ -1,4 +1,5 @@
 import Link from "next/link";
+import React from "react";
 
 /**
  * One definition for every button-shaped thing, whether it renders as a
@@ -51,11 +52,24 @@ export function Button({
   variant = "secondary",
   size = "md",
   className,
+  asChild = false,
   children,
   ...props
-}: CommonProps & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+}: CommonProps &
+  React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    /** Applies the button styling to a single child element, e.g. a <Link>. */
+    asChild?: boolean;
+  }) {
+  const classes = classesFor(variant, size, className);
+
+  if (asChild && React.isValidElement<{ className?: string }>(children)) {
+    return React.cloneElement(children, {
+      className: [children.props.className, classes].filter(Boolean).join(" "),
+    });
+  }
+
   return (
-    <button {...props} className={classesFor(variant, size, className)}>
+    <button {...props} className={classes}>
       {children}
     </button>
   );

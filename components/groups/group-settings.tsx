@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { ApiError, groupsApi } from "@/lib/client/api";
+import { useGuestGate } from "@/components/auth/guest-gate";
 
 import { Avatar } from "@/components/ui/avatar";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -13,9 +14,16 @@ import { CurrencyCombobox } from "@/components/ui/currency-combobox";
 import { formatMoney, formatSignedMoney } from "@/lib/format";
 import type { GroupSummary } from "@/lib/types";
 
-/** UI ONLY — nothing here submits. */
+/** What the sign-up prompt says a guest was trying to do. */
+const INTENTS: Record<string, string> = {
+  details: "changing a group's details",
+  "add-member": "adding someone to a group",
+  delete: "deleting a group",
+};
+
 export function GroupSettings({ group }: { group: GroupSummary }) {
   const router = useRouter();
+  const { requestWrite } = useGuestGate();
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -28,7 +36,17 @@ export function GroupSettings({ group }: { group: GroupSummary }) {
    * ApiError into readable copy, and re-reads the Server Components so the
    * sidebar, balances and member list all reflect the change together.
    */
-  async function run(key: string, action: () => Promise<unknown>, after?: () => void) {
+  function run(key: string, action: () => Promise<unknown>, after?: () => void) {
+    requestWrite(INTENTS[key] ?? "changing this group", () =>
+      void perform(key, action, after),
+    );
+  }
+
+  async function perform(
+    key: string,
+    action: () => Promise<unknown>,
+    after?: () => void,
+  ) {
     setPending(key);
     setError(null);
     setSaved(false);
@@ -194,7 +212,7 @@ export function GroupSettings({ group }: { group: GroupSummary }) {
                         : undefined
                   }
                   onClick={() =>
-                    void run(`member-${m.id}`, () =>
+                    run(`member-${m.id}`, () =>
                       groupsApi.removeMember(group.id, m.id),
                     )
                   }
@@ -213,7 +231,7 @@ export function GroupSettings({ group }: { group: GroupSummary }) {
           <AddMemberRow
             existingNames={group.members.map((m) => m.name)}
             onAdd={({ name, email }) =>
-              void run("add-member", () =>
+              run("add-member", () =>
                 groupsApi.addMember(group.id, { name, email: email || undefined }),
               )
             }
@@ -246,12 +264,14 @@ export function GroupSettings({ group }: { group: GroupSummary }) {
             disabled={unsettled.length > 0 || pending === "delete"}
             aria-busy={pending === "delete"}
             onClick={() => {
-              // Deleting a group destroys its whole history, so this is one of
-              // the few places a confirm genuinely earns its interruption.
-              if (!window.confirm(`Delete ${group.name}? This cannot be undone.`)) return;
-              void run("delete", () => groupsApi.remove(group.id), () =>
+              requestWrite("deleting a group", () => {
+                // Deleting a group destroys its whole history, so this is one
+                // of the few places a confirm genuinely earns its interruption.
+                if (!window.confirm(`Delete ${group.name}? This cannot be undone.`)) return;
+                void perform("delete", () => groupsApi.remove(group.id), () =>
                 router.push("/groups"),
-              );
+                );
+              });
             }}
             variant="danger"
           >

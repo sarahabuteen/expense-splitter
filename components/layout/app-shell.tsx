@@ -3,8 +3,10 @@
 import { useState } from "react";
 
 import { Logo } from "@/components/brand/logo";
+import { GuestGateProvider } from "@/components/auth/guest-gate";
 import { NewGroupProvider } from "@/components/groups/new-group-dialog";
 import { Sidebar } from "./sidebar";
+import type { Account } from "@/lib/server/account";
 import type { GroupSummary } from "@/lib/types";
 
 /**
@@ -13,19 +15,24 @@ import type { GroupSummary } from "@/lib/types";
  */
 export function AppShell({
   groups,
+  isGuest,
+  account,
   children,
 }: {
   groups: GroupSummary[];
+  isGuest: boolean;
+  account: Account | null;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
 
   return (
+    <GuestGateProvider isGuest={isGuest}>
     <NewGroupProvider>
     <div className="flex min-h-full flex-1">
       {/* Desktop rail */}
       <aside className="sticky top-0 hidden h-screen w-sidebar shrink-0 border-e border-border bg-bg-secondary lg:block">
-        <Sidebar groups={groups} />
+        <Sidebar groups={groups} account={account} />
       </aside>
 
       {/* Mobile drawer */}
@@ -38,7 +45,7 @@ export function AppShell({
             className="absolute inset-0 bg-text-primary/30 backdrop-blur-[2px]"
           />
           <aside className="absolute inset-y-0 start-0 w-72 border-e border-border bg-bg-secondary shadow-lg">
-            <Sidebar groups={groups} />
+            <Sidebar groups={groups} account={account} />
           </aside>
         </div>
       ) : null}
@@ -62,6 +69,7 @@ export function AppShell({
       </div>
     </div>
     </NewGroupProvider>
+    </GuestGateProvider>
   );
 }
 

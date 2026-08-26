@@ -68,7 +68,7 @@ export default async function GroupPage({
       </div>
 
       {/* One meta line: totals at a glance, then out of the way. */}
-      <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-3 text-sm">
+      <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-3 border-y border-border py-3.5 text-sm">
         <span className="flex items-center gap-2">
           <span
             aria-hidden="true"
@@ -94,8 +94,6 @@ export default async function GroupPage({
           </span>
         </span>
       </div>
-
-      <hr className="mt-6 border-border" />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_var(--container-detail)]">
         <GroupWorkspace
