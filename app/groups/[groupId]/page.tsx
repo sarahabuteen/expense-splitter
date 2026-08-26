@@ -3,6 +3,7 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { notFound } from "next/navigation";
 
 import { ActivityList } from "@/components/groups/activity-list";
+import { ExpenseComposer } from "@/components/expenses/expense-composer";
 import { AvatarStack } from "@/components/ui/avatar";
 import { BalanceRail } from "@/components/groups/balance-rail";
 import { GroupEmptyState } from "@/components/groups/group-empty-state";
@@ -64,7 +65,10 @@ export default async function GroupPage({ params }: PageProps<"/groups/[groupId]
       </div>
 
       {isNew ? (
-        <div className="mt-8">
+        <div className="mt-8 flex flex-col gap-6">
+          {group.members.length > 1 ? (
+            <ExpenseComposer members={group.members} currency={group.currency} />
+          ) : null}
           <GroupEmptyState group={group} />
         </div>
       ) : (
@@ -101,7 +105,9 @@ export default async function GroupPage({ params }: PageProps<"/groups/[groupId]
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_var(--container-detail)]">
         <section>
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <ExpenseComposer members={group.members} currency={group.currency} />
+
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <button
               type="button"
               className="flex h-9 items-center gap-2 rounded-md px-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-bg-tertiary hover:text-text-primary"
@@ -121,7 +127,7 @@ export default async function GroupPage({ params }: PageProps<"/groups/[groupId]
           </div>
 
           <div className="mt-3">
-            <ActivityList rows={rows} />
+            <ActivityList rows={rows} groupCurrency={group.currency} />
           </div>
         </section>
 

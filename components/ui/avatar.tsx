@@ -6,6 +6,12 @@ import type { AvatarColor } from "@/lib/avatar-colors";
  * LITERALLY in the source, so `bg-avatar-${color}` would compile to nothing and
  * every avatar would render colourless.
  */
+const SIZES = {
+  xs: "size-5 text-[0.5rem]",
+  sm: "size-6 text-[0.625rem]",
+  md: "size-8 text-xs",
+} as const;
+
 const BG: Record<AvatarColor, string> = {
   indigo: "bg-avatar-indigo",
   amber: "bg-avatar-amber",
@@ -34,14 +40,16 @@ export function Avatar({
 }: {
   name: string;
   color: AvatarColor;
-  size?: "sm" | "md";
+  /** "xs" matches a 20px icon slot exactly, so it cannot overflow and drift. */
+  size?: "xs" | "sm" | "md";
 }) {
   return (
     <span
       aria-hidden="true"
       title={name}
       className={`inline-grid shrink-0 place-items-center rounded-full font-semibold text-white ${
-        size === "sm" ? "size-6 text-[0.625rem]" : "size-8 text-xs"
+        SIZES[size]
+      
       } ${BG[color]}`}
     >
       {initials(name)}

@@ -3,6 +3,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { CURRENCIES, currencyFor, type Currency } from "@/lib/currencies";
+import { CurrencySymbol } from "./currency-symbol";
 
 /**
  * Searchable currency picker.
@@ -22,12 +23,14 @@ export function CurrencyCombobox({
   disabled,
   id,
   describedBy,
+  onChange,
 }: {
   name: string;
   defaultValue?: string;
   disabled?: boolean;
   id?: string;
   describedBy?: string;
+  onChange?: (code: string) => void;
 }) {
   const reactId = useId();
   const inputId = id ?? `${reactId}-input`;
@@ -78,6 +81,7 @@ export function CurrencyCombobox({
 
   function choose(currency: Currency) {
     setCode(currency.code);
+    onChange?.(currency.code);
     setQuery("");
     setOpen(false);
     inputRef.current?.blur();
@@ -209,8 +213,8 @@ export function CurrencyCombobox({
                   index === activeIndex ? "bg-accent-subtle" : ""
                 }`}
               >
-                <span className="w-10 shrink-0 font-mono text-xs text-text-secondary">
-                  {currency.symbol}
+                <span className="flex w-10 shrink-0 items-center font-mono text-xs text-text-secondary">
+                  <CurrencySymbol code={currency.code} />
                 </span>
                 <span className="font-medium">{currency.code}</span>
                 <span className="truncate text-text-secondary">{currency.name}</span>
@@ -259,6 +263,9 @@ function measure(input: HTMLInputElement | null): Anchor | null {
 }
 
 function label(currency: Currency): string {
+  // SAR's symbol is drawn as an icon, so the text label omits it rather than
+  // falling back to the superseded glyph.
+  if (currency.code === "SAR") return `${currency.code} — ${currency.name}`;
   return `${currency.symbol}  ${currency.code} — ${currency.name}`;
 }
 

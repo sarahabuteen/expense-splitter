@@ -44,3 +44,45 @@ export function initials(name: string): string {
   if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
+
+/**
+ * "2 hours ago", "yesterday", "3 months ago".
+ *
+ * Computed against a passed-in `now` so the caller controls the clock: the
+ * ledger renders on the server, and a value derived from a hidden Date.now()
+ * would differ between server and client.
+ */
+export function formatRelativeTime(iso: string, now: Date = new Date()): string {
+  const then = new Date(`${iso}T00:00:00Z`);
+  const days = Math.floor(
+    (Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) -
+      Date.UTC(then.getUTCFullYear(), then.getUTCMonth(), then.getUTCDate())) /
+      86_400_000,
+  );
+
+  if (days < 0) return "in the future";
+  if (days === 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days} days ago`;
+  if (days < 31) {
+    const weeks = Math.floor(days / 7);
+    return weeks === 1 ? "last week" : `${weeks} weeks ago`;
+  }
+  if (days < 365) {
+    const months = Math.max(1, Math.round(days / 30));
+    return months === 1 ? "last month" : `${months} months ago`;
+  }
+  const years = Math.max(1, Math.round(days / 365));
+  return years === 1 ? "last year" : `${years} years ago`;
+}
+
+/** The full date, shown on hover and to assistive tech. */
+export function formatFullDate(iso: string): string {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}

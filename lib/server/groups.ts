@@ -3,6 +3,7 @@ import "server-only";
 import { getActor } from "@/lib/supabase/actor";
 import { createGuestClient, createRouteClient } from "@/lib/supabase/server";
 import { simplifyDebts } from "@/lib/balances";
+import { formatFullDate, formatRelativeTime } from "@/lib/format";
 import type { AvatarColor } from "@/lib/avatar-colors";
 import type { ActivityRow, GroupDetail, GroupMember, GroupSummary } from "@/lib/types";
 
@@ -132,6 +133,21 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
 
   // Category names are fetched separately: the hand-written Database types
   // declare no relationships, so an embedded select would not type.
+  // Splits for the expanded row. One set-based read, not one per expense.
+  const expenseIds = (expenses ?? []).map((e) => e.id as string);
+  const { data: allSplits } = expenseIds.length
+    ? await db
+        .from("expense_splits")
+        .select("expense_id, member_id, amount_minor, converted_amount_minor")
+        .in("expense_id", expenseIds)
+    : { data: [] };
+
+  const splitsByExpense = new Map<string, typeof allSplits>();
+  for (const split of allSplits ?? []) {
+    const key = split.expense_id as string;
+    splitsByExpense.set(key, [...(splitsByExpense.get(key) ?? []), split]);
+  }
+
   const categoryIds = [
     ...new Set((expenses ?? []).map((e) => e.category_id).filter(Boolean)),
   ] as string[];
@@ -155,6 +171,19 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
         amountMinor: Number(e.amount_minor),
         currency: e.currency as string,
         splitType: e.split_type as "equal" | "exact" | "percentage" | "shares",
+        convertedMinor: Number(e.converted_amount_minor),
+        relativeDate: formatRelativeTime(e.date as string),
+        fullDate: formatFullDate(e.date as string),
+        splits: (splitsByExpense.get(e.id as string) ?? []).map((split) => {
+          const member = nameOf.get(split.member_id as string);
+          return {
+            memberId: split.member_id as string,
+            name: member?.name ?? "Someone",
+            color: member?.color ?? ("indigo" as const),
+            amountMinor: Number(split.amount_minor),
+            isPayer: split.member_id === e.paid_by,
+          };
+        }),
       }),
     ),
     ...(settlements ?? []).map(
@@ -168,6 +197,9 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
         date: s.date as string,
         amountMinor: Number(s.amount_minor),
         currency: s.currency as string,
+        convertedMinor: Number(s.converted_amount_minor),
+        relativeDate: formatRelativeTime(s.date as string),
+        fullDate: formatFullDate(s.date as string),
       }),
     ),
   ].sort((a, b) => b.date.localeCompare(a.date));

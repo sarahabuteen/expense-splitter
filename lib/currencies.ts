@@ -35,6 +35,8 @@ export const CURRENCIES: Currency[] = [
 
   // Middle East & North Africa
   { code: "AED", name: "UAE Dirham", symbol: "د.إ", decimals: 2, locale: "en-US" },
+  // Symbol drawn as a Lucide icon (see components/ui/currency-symbol.tsx);
+  // ﷼ is kept here so searching for the old glyph still finds it.
   { code: "SAR", name: "Saudi Riyal", symbol: "﷼", decimals: 2, locale: "en-US" },
   { code: "QAR", name: "Qatari Riyal", symbol: "﷼", decimals: 2, locale: "en-US" },
   { code: "JOD", name: "Jordanian Dinar", symbol: "د.ا", decimals: 3, locale: "en-US" },

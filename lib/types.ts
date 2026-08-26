@@ -35,6 +35,18 @@ export type ActivityRow =
       amountMinor: number;
       currency: string;
       splitType: "equal" | "exact" | "percentage" | "shares";
+      /** Who owed what, for the expanded detail view. */
+      splits: {
+        memberId: string;
+        name: string;
+        color: AvatarColor;
+        amountMinor: number;
+        isPayer: boolean;
+      }[];
+      /** In the group's currency, when the expense was paid in another. */
+      convertedMinor: number;
+      relativeDate: string;
+      fullDate: string;
     }
   | {
       kind: "settlement";
@@ -46,6 +58,9 @@ export type ActivityRow =
       date: string;
       amountMinor: number;
       currency: string;
+      convertedMinor: number;
+      relativeDate: string;
+      fullDate: string;
     };
 
 export type PlannedPayment = {
