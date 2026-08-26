@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { GroupsEmptyState } from "@/components/groups/empty-state";
 import { listGroups } from "@/lib/server/groups";
+import { getActor } from "@/lib/supabase/actor";
 
 /**
  * There is no group-list screen: the sidebar IS the group list. So /groups is a
@@ -9,10 +10,12 @@ import { listGroups } from "@/lib/server/groups";
  * is nothing to go to.
  */
 export default async function GroupsIndexPage() {
-  const groups = await listGroups();
+  const [groups, { userId }] = await Promise.all([listGroups(), getActor()]);
 
   if (groups.length > 0) {
-    redirect(`/groups/${groups[0].id}`);
+    // A guest is only ever looking at the demo, so send them to its readable
+    // URL rather than to the id it happens to be stored under.
+    redirect(userId ? `/groups/${groups[0].id}` : "/guest");
   }
 
   return (

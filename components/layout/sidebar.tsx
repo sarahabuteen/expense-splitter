@@ -20,12 +20,17 @@ import type { GroupSummary } from "@/lib/types";
 export function Sidebar({
   groups,
   account,
+  isGuest,
 }: {
   groups: GroupSummary[];
   account: Account | null;
+  isGuest: boolean;
 }) {
   const pathname = usePathname();
   const { open } = useNewGroup();
+  // The demo group a guest lands on lives at /guest, so the rail links there
+  // instead of to an id nobody can read. Its own subpages are unchanged.
+  const guestLandingId = isGuest ? groups[0]?.id : undefined;
 
   return (
     <div className="flex h-full flex-col">
@@ -77,13 +82,17 @@ export function Sidebar({
         ) : (
         <ul className="flex flex-col gap-0.5">
           {groups.map((group) => {
-            const active = pathname.startsWith(`/groups/${group.id}`);
+            const isGuestLanding = group.id === guestLandingId;
+            const href = isGuestLanding ? "/guest" : `/groups/${group.id}`;
+            const active =
+              pathname.startsWith(`/groups/${group.id}`) ||
+              (isGuestLanding && pathname === "/guest");
             const settled = group.yourBalanceSettled;
 
             return (
               <li key={group.id}>
                 <Link
-                  href={`/groups/${group.id}`}
+                  href={href}
                   aria-current={active ? "page" : undefined}
                   className={`relative flex items-center justify-between gap-3 rounded-md py-2 pe-3 ps-3 text-sm transition-colors ${
                     active

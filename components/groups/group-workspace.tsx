@@ -41,7 +41,10 @@ export function GroupWorkspace({
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    // min-w-0: as a grid item this would otherwise refuse to be narrower than
+    // its own min-content, and the activity rows would push the page wider
+    // than a phone screen instead of truncating inside it.
+    <div className="flex min-w-0 flex-col gap-6">
       <div ref={composerRef}>
         <ExpenseComposer
           // Remounting on change is what lets the composer initialise from the

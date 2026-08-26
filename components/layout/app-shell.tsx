@@ -32,7 +32,7 @@ export function AppShell({
     <div className="flex min-h-full flex-1">
       {/* Desktop rail */}
       <aside className="sticky top-0 hidden h-screen w-sidebar shrink-0 border-e border-border bg-bg-secondary lg:block">
-        <Sidebar groups={groups} account={account} />
+        <Sidebar groups={groups} account={account} isGuest={isGuest} />
       </aside>
 
       {/* Mobile drawer */}
@@ -45,7 +45,7 @@ export function AppShell({
             className="absolute inset-0 bg-text-primary/30 backdrop-blur-[2px]"
           />
           <aside className="absolute inset-y-0 start-0 w-72 border-e border-border bg-bg-secondary shadow-lg">
-            <Sidebar groups={groups} account={account} />
+            <Sidebar groups={groups} account={account} isGuest={isGuest} />
           </aside>
         </div>
       ) : null}
