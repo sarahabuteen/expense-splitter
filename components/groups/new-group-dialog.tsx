@@ -11,8 +11,9 @@ import {
   useState,
 } from "react";
 
+import { ApiError, groupsApi } from "@/lib/client/api";
 import { Button } from "@/components/ui/button";
-import { CurrencySelect } from "./currency-select";
+import { CurrencyCombobox } from "@/components/ui/currency-combobox";
 import { MemberChipsInput, type Chip } from "./member-chips-input";
 
 /**
@@ -69,6 +70,8 @@ function NewGroupDialog({
   const [chips, setChips] = useState<Chip[]>([
     { key: "you", name: "You", color: "indigo" },
   ]);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const dialog = ref.current;
@@ -91,12 +94,36 @@ function NewGroupDialog({
       className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-xl border border-border bg-surface p-0 text-text-primary shadow-lg backdrop:bg-black/50 backdrop:backdrop-blur-[2px]"
     >
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          onClose();
-          // UI only: nothing is persisted. Landing in the group you just made
-          // is navigation to the result, not a continuation of the task.
-          router.push("/groups/grp_new");
+        onSubmit={async (event) => {
+          event.preventDefault();
+          const form = new FormData(event.currentTarget);
+          setPending(true);
+          setError(null);
+          try {
+            const { id } = await groupsApi.create({
+              name: String(form.get("name") ?? ""),
+              currency: String(form.get("currency") ?? "USD"),
+              // The first chip is the creator, added server-side from the
+              // signed-in profile — sending it again would duplicate them.
+              memberNames: chips.slice(1).map((c) => c.name),
+            });
+            onClose();
+            setChips([{ key: "you", name: "You", color: "indigo" }]);
+            router.push(`/groups/${id}`);
+            // Server Components hold the sidebar's group list, so it needs to
+            // re-read for the new group to appear in the nav.
+            router.refresh();
+          } catch (err) {
+            setError(
+              err instanceof ApiError
+                ? err.requiresAuth
+                  ? "Sign in to create a group of your own."
+                  : err.message
+                : "Something went wrong.",
+            );
+          } finally {
+            setPending(false);
+          }
         }}
       >
         <div className="flex items-start justify-between gap-4 px-6 pb-4 pt-5">
@@ -116,6 +143,14 @@ function NewGroupDialog({
         </div>
 
         <div className="flex flex-col gap-4 px-6">
+          {error ? (
+            <p
+              role="alert"
+              className="rounded-md border border-owe/30 bg-owe-subtle px-3 py-2 text-sm text-owe"
+            >
+              {error}
+            </p>
+          ) : null}
           <div className="flex flex-col gap-1.5">
             <label htmlFor="ng-name" className="text-sm font-medium">
               Group name
@@ -152,7 +187,7 @@ function NewGroupDialog({
             <label htmlFor="ng-currency" className="text-sm font-medium">
               Default currency
             </label>
-            <CurrencySelect
+            <CurrencyCombobox
               id="ng-currency"
               name="currency"
               describedBy="ng-currency-hint"
@@ -167,8 +202,8 @@ function NewGroupDialog({
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" variant="primary">
-            Create group
+          <Button type="submit" variant="primary" disabled={pending} aria-busy={pending}>
+            {pending ? "Creating…" : "Create group"}
           </Button>
         </div>
       </form>

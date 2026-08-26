@@ -1,7 +1,7 @@
 import { AppShell } from "@/components/layout/app-shell";
-import { MOCK_GROUPS } from "@/lib/mock/groups";
+import { listGroups } from "@/lib/server/groups";
 
-export default function GroupsLayout({ children }: LayoutProps<"/groups">) {
-  // UI only — swap for the server data layer when it exists.
-  return <AppShell groups={MOCK_GROUPS}>{children}</AppShell>;
+export default async function GroupsLayout({ children }: LayoutProps<"/groups">) {
+  const groups = await listGroups();
+  return <AppShell groups={groups}>{children}</AppShell>;
 }

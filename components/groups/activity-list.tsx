@@ -1,7 +1,7 @@
 import { Avatar } from "@/components/ui/avatar";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { formatMoney } from "@/lib/format";
-import type { ActivityRow } from "@/lib/mock/activity";
+import type { ActivityRow } from "@/lib/types";
 
 /**
  * The group timeline: expenses and settlements interleaved, newest first.

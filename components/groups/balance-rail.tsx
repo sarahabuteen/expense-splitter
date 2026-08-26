@@ -1,16 +1,15 @@
 import { Avatar } from "@/components/ui/avatar";
 import { formatMoney, formatSignedMoney } from "@/lib/format";
-import type { GroupSummary } from "@/lib/mock/groups";
-import { JAPAN_PLAN, JAPAN_VIEWER } from "@/lib/mock/activity";
-
-const SETTLED_THRESHOLD_MINOR = 1;
+import { isSettled } from "@/lib/balances";
+import type { GroupDetail } from "@/lib/types";
 
 /** The detail pane: where you stand, what to pay, and everyone's position. */
-export function BalanceRail({ group }: { group: GroupSummary }) {
-  const settled = Math.abs(group.yourBalanceMinor) <= SETTLED_THRESHOLD_MINOR;
+export function BalanceRail({ group }: { group: GroupDetail }) {
+  const settled = isSettled(group.yourBalanceMinor);
   const owed = group.yourBalanceMinor > 0;
-  const yours = JAPAN_PLAN.find((p) => p.isYou);
-  const others = JAPAN_PLAN.filter((p) => !p.isYou);
+  // Both already resolved server-side by simplifyDebts, keyed on member ids.
+  const { yours, others } = group.plan;
+  const owedToViewer = yours?.viewerRole === "payee";
 
   return (
     <div className="flex flex-col gap-4">
@@ -53,13 +52,13 @@ export function BalanceRail({ group }: { group: GroupSummary }) {
           <div>
             <dt className="text-xs text-text-secondary">You paid</dt>
             <dd className="tabular mt-1 font-mono text-sm font-medium text-text-primary">
-              {formatMoney(JAPAN_VIEWER.paidMinor, group.currency)}
+              {formatMoney(group.viewerPaidMinor, group.currency)}
             </dd>
           </div>
           <div>
             <dt className="text-xs text-text-secondary">Your share</dt>
             <dd className="tabular mt-1 font-mono text-sm font-medium text-text-primary">
-              {formatMoney(JAPAN_VIEWER.shareMinor, group.currency)}
+              {formatMoney(group.viewerShareMinor, group.currency)}
             </dd>
           </div>
         </dl>
@@ -68,16 +67,31 @@ export function BalanceRail({ group }: { group: GroupSummary }) {
       <Card>
         <h2 className="text-sm font-semibold text-text-primary">Suggested settlements</h2>
         <p className="mt-1 text-xs text-text-secondary">
-          A minimal set of payments to square everyone up.
+          {!yours && others.length === 0
+            ? "Nobody owes anybody anything."
+            : "A minimal set of payments to square everyone up."}
         </p>
 
         {yours ? (
           <div className="mt-4 flex items-center gap-3">
-            <Avatar name={yours.from} color={yours.fromColor} size="sm" />
+            <Avatar
+              name={owedToViewer ? yours.from : yours.to}
+              color={owedToViewer ? yours.fromColor : yours.toColor}
+              size="sm"
+            />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm text-text-primary">{yours.from} owes you</p>
-              <p className="tabular mt-0.5 font-mono text-sm font-medium text-owed">
-                {formatSignedMoney(yours.amountMinor, group.currency)}
+              <p className="truncate text-sm text-text-primary">
+                {owedToViewer ? `${yours.from} owes you` : `You owe ${yours.to}`}
+              </p>
+              <p
+                className={`tabular mt-0.5 font-mono text-sm font-medium ${
+                  owedToViewer ? "text-owed" : "text-owe"
+                }`}
+              >
+                {formatSignedMoney(
+                  owedToViewer ? yours.amountMinor : -yours.amountMinor,
+                  group.currency,
+                )}
               </p>
             </div>
             <button
@@ -96,7 +110,7 @@ export function BalanceRail({ group }: { group: GroupSummary }) {
             </h3>
             <ul className="mt-3 flex flex-col gap-3">
               {others.map((p) => (
-                <li key={`${p.from}-${p.to}`}>
+                <li key={`${p.fromId}-${p.toId}`}>
                   <div className="flex items-center gap-2 text-sm text-text-primary">
                     <Avatar name={p.from} color={p.fromColor} size="sm" />
                     <span className="truncate">{p.from}</span>
@@ -126,7 +140,7 @@ export function BalanceRail({ group }: { group: GroupSummary }) {
         <h2 className="text-sm font-semibold text-text-primary">Member balances</h2>
         <ul className="mt-4 flex flex-col gap-3">
           {group.members.map((m) => {
-            const isSettled = Math.abs(m.balanceMinor) <= SETTLED_THRESHOLD_MINOR;
+            const memberSettled = isSettled(m.balanceMinor);
             return (
               <li key={m.id} className="flex items-center gap-2.5">
                 <Avatar name={m.name} color={m.color} size="sm" />
@@ -135,14 +149,14 @@ export function BalanceRail({ group }: { group: GroupSummary }) {
                 </span>
                 <span
                   className={`tabular shrink-0 font-mono text-sm ${
-                    isSettled
+                    memberSettled
                       ? "text-text-secondary"
                       : m.balanceMinor > 0
                         ? "text-owed"
                         : "text-owe"
                   }`}
                 >
-                  {isSettled
+                  {memberSettled
                     ? formatMoney(0, group.currency)
                     : formatSignedMoney(m.balanceMinor, group.currency)}
                 </span>

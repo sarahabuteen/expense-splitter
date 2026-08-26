@@ -23,6 +23,66 @@ export function EmptyLedgerIllustration({ className }: { className?: string }) {
   );
 }
 
+/**
+ * Same idea for an empty group list: ghost rows shaped like the sidebar's —
+ * a cluster of members, the group name, and a balance.
+ */
+export function EmptyGroupsIllustration({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 168 104"
+      aria-hidden="true"
+      className={className}
+      fill="none"
+    >
+      <GhostGroupRow y={4} opacity={1} accent />
+      <GhostGroupRow y={40} opacity={0.55} />
+      <GhostGroupRow y={76} opacity={0.25} />
+    </svg>
+  );
+}
+
+function GhostGroupRow({
+  y,
+  opacity,
+  accent,
+}: {
+  y: number;
+  opacity: number;
+  accent?: boolean;
+}) {
+  return (
+    <g opacity={opacity}>
+      <rect
+        x="1"
+        y={y}
+        width="166"
+        height="28"
+        rx="6"
+        className="stroke-border"
+        strokeWidth="1.5"
+        strokeDasharray="4 4"
+      />
+      {/* Overlapping member circles, as the group rows carry */}
+      <circle cx="18" cy={y + 14} r="5" className={accent ? "fill-accent-subtle" : "fill-bg-tertiary"} />
+      <circle cx="26" cy={y + 14} r="5" className="fill-bg-tertiary" />
+      <circle cx="34" cy={y + 14} r="5" className={accent ? "fill-accent/20" : "fill-bg-tertiary"} />
+      {/* Group name */}
+      <rect x="46" y={y + 9} width="46" height="4.5" rx="2.25" className="fill-bg-tertiary" />
+      <rect x="46" y={y + 17} width="26" height="3.5" rx="1.75" className="fill-bg-tertiary" />
+      {/* Balance */}
+      <rect
+        x="127"
+        y={y + 11}
+        width="30"
+        height="6"
+        rx="3"
+        className={accent ? "fill-accent/25" : "fill-bg-tertiary"}
+      />
+    </g>
+  );
+}
+
 function GhostRow({
   y,
   opacity,

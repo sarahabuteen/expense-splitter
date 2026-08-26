@@ -1,7 +1,7 @@
 import { AvatarStack } from "@/components/ui/avatar";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { EmptyLedgerIllustration } from "@/components/ui/empty-illustration";
-import type { GroupSummary } from "@/lib/mock/groups";
+import type { GroupSummary } from "@/lib/types";
 
 /**
  * A group that exists but has nothing in it yet.

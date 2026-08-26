@@ -3,13 +3,13 @@ import { notFound } from "next/navigation";
 
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { GroupSettings } from "@/components/groups/group-settings";
-import { mockGroup } from "@/lib/mock/groups";
+import { getGroup } from "@/lib/server/groups";
 
 export async function generateMetadata({
   params,
 }: PageProps<"/groups/[groupId]/settings">): Promise<Metadata> {
   const { groupId } = await params;
-  const group = mockGroup(groupId);
+  const group = await getGroup(groupId);
   return {
     title: group
       ? `${group.name} settings · Expense Splitter`
@@ -21,7 +21,7 @@ export default async function GroupSettingsPage({
   params,
 }: PageProps<"/groups/[groupId]/settings">) {
   const { groupId } = await params;
-  const group = mockGroup(groupId);
+  const group = await getGroup(groupId);
   if (!group) notFound();
 
   return (

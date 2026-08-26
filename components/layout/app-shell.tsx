@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Logo } from "@/components/brand/logo";
 import { NewGroupProvider } from "@/components/groups/new-group-dialog";
 import { Sidebar } from "./sidebar";
-import type { GroupSummary } from "@/lib/mock/groups";
+import type { GroupSummary } from "@/lib/types";
 
 /**
  * Sidebar on desktop, a drawer behind a menu button on mobile — the patterns

@@ -7,7 +7,7 @@ import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "./theme-toggle";
 import { useNewGroup } from "@/components/groups/new-group-dialog";
 import { formatMoney, formatSignedMoney } from "@/lib/format";
-import type { GroupSummary } from "@/lib/mock/groups";
+import type { GroupSummary } from "@/lib/types";
 
 const SETTLED_THRESHOLD_MINOR = 1;
 
@@ -38,6 +38,28 @@ export function Sidebar({ groups }: { groups: GroupSummary[] }) {
         <h2 className="px-2 pb-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">
           Groups
         </h2>
+        {groups.length === 0 ? (
+          /* An empty rail is just a void. Ghost rows show where groups will
+             land, in the same dashed language as the main empty state. */
+          <div className="px-2 pt-1">
+            <div aria-hidden="true" className="flex flex-col gap-1.5">
+              {[1, 0.55, 0.25].map((opacity) => (
+                <div
+                  key={opacity}
+                  style={{ opacity }}
+                  className="flex h-9 items-center gap-2 rounded-md border border-dashed border-border px-2.5"
+                >
+                  <span className="size-4 rounded-full bg-bg-tertiary" />
+                  <span className="h-2 flex-1 rounded-full bg-bg-tertiary" />
+                  <span className="h-2 w-8 rounded-full bg-bg-tertiary" />
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 px-0.5 text-xs leading-relaxed text-text-secondary">
+              Your groups will show up here once you make one.
+            </p>
+          </div>
+        ) : (
         <ul className="flex flex-col gap-0.5">
           {groups.map((group) => {
             const active = pathname.startsWith(`/groups/${group.id}`);
@@ -80,13 +102,18 @@ export function Sidebar({ groups }: { groups: GroupSummary[] }) {
             );
           })}
         </ul>
+        )}
       </nav>
 
       <div className="border-t border-border px-3 py-3">
         <button
           type="button"
           onClick={open}
-          className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-bg-tertiary hover:text-text-primary"
+          className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+            groups.length === 0
+              ? "justify-center bg-accent text-white hover:bg-accent-hover"
+              : "text-text-secondary hover:bg-bg-tertiary hover:text-text-primary"
+          }`}
         >
           <PlusIcon />
           New group

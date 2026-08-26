@@ -7,14 +7,13 @@ import { AvatarStack } from "@/components/ui/avatar";
 import { BalanceRail } from "@/components/groups/balance-rail";
 import { GroupEmptyState } from "@/components/groups/group-empty-state";
 import { formatMoney } from "@/lib/format";
-import { JAPAN_ACTIVITY } from "@/lib/mock/activity";
-import { mockGroup } from "@/lib/mock/groups";
+import { getGroup } from "@/lib/server/groups";
 
 export async function generateMetadata({
   params,
 }: PageProps<"/groups/[groupId]">): Promise<Metadata> {
   const { groupId } = await params;
-  const group = mockGroup(groupId);
+  const group = await getGroup(groupId);
   return {
     title: group ? `${group.name} · Expense Splitter` : "Group · Expense Splitter",
   };
@@ -22,13 +21,12 @@ export async function generateMetadata({
 
 export default async function GroupPage({ params }: PageProps<"/groups/[groupId]">) {
   const { groupId } = await params;
-  const group = mockGroup(groupId);
+  const group = await getGroup(groupId);
   if (!group) notFound();
 
   const isNew = group.expenseCount === 0;
 
-  // UI only — every populated group currently renders the Japan timeline.
-  const rows = JAPAN_ACTIVITY;
+  const rows = group.activity;
   const expenses = rows.filter((r) => r.kind === "expense").length;
   const settlements = rows.length - expenses;
 
