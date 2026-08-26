@@ -52,6 +52,15 @@ export type ExpenseBody = {
   exchangeRate?: number;
 };
 
+export type SettlementBody = {
+  fromMember: string;
+  toMember: string;
+  amountMinor: number;
+  currency: string;
+  date: string;
+  exchangeRate?: number;
+};
+
 export const groupsApi = {
   create: (input: {
     name: string;
@@ -89,6 +98,17 @@ export const groupsApi = {
 
   deleteExpense: (groupId: string, expenseId: string) =>
     send<{ id: string }>(`/api/groups/${groupId}/expenses/${expenseId}`, {
+      method: "DELETE",
+    }),
+
+  createSettlement: (groupId: string, input: SettlementBody) =>
+    send<{ id: string }>(`/api/groups/${groupId}/settlements`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+
+  deleteSettlement: (groupId: string, settlementId: string) =>
+    send<{ id: string }>(`/api/groups/${groupId}/settlements/${settlementId}`, {
       method: "DELETE",
     }),
 

@@ -203,6 +203,7 @@ export function BalanceRail({ group }: { group: GroupDetail }) {
       <RecordSettlementDialog
         key={recording ? `${recording.fromId}-${recording.toId}` : "idle"}
         payment={recording}
+        groupId={group.id}
         currency={group.currency}
         viewerName={group.members.find((m) => m.isViewer)?.name}
         onClose={() => setRecording(null)}

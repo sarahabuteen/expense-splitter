@@ -1,6 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+
+import { ApiError, groupsApi } from "@/lib/client/api";
 
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -26,15 +29,20 @@ import type { PlannedPayment } from "@/lib/types";
  */
 export function RecordSettlementDialog({
   payment,
+  groupId,
   currency,
   viewerName,
   onClose,
 }: {
   payment: PlannedPayment | null;
+  groupId: string;
   currency: string;
   viewerName?: string;
   onClose: () => void;
 }) {
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   // Initialised from props, not synced in an effect: callers remount this with
   // a `key` per payment, which is React's own answer to "reset state when the
   // input changes" — and the compiler lint rejects setState during an effect.
@@ -63,9 +71,10 @@ export function RecordSettlementDialog({
             type="submit"
             form="record-settlement-form"
             variant="primary"
-            disabled={entered <= 0 || overpay}
+            disabled={entered <= 0 || overpay || pending}
+            aria-busy={pending}
           >
-            Record payment
+            {pending ? "Recording…" : "Record payment"}
           </Button>
         </>
       }
@@ -73,10 +82,32 @@ export function RecordSettlementDialog({
       {payment ? (
         <form
           id="record-settlement-form"
-          onSubmit={(event) => {
-            // UI only — not wired to an API yet.
+          onSubmit={async (event) => {
             event.preventDefault();
-            onClose();
+            setPending(true);
+            setError(null);
+            try {
+              await groupsApi.createSettlement(groupId, {
+                fromMember: payment.fromId,
+                toMember: payment.toId,
+                amountMinor: entered,
+                currency,
+                date,
+              });
+              onClose();
+              // Balances, the plan and the timeline all live in Server
+              // Components, so they have to re-read together.
+              router.refresh();
+            } catch (err) {
+              setError(
+                err instanceof ApiError
+                  ? err.requiresAuth
+                    ? "Sign in to record payments in a group of your own."
+                    : err.message
+                  : "Something went wrong.",
+              );
+              setPending(false);
+            }
           }}
         >
           {/* Who paid whom, stated plainly — the thing most easily got backwards. */}
@@ -102,6 +133,15 @@ export function RecordSettlementDialog({
               {payment.to === viewerName ? "You" : payment.to}
             </span>
           </div>
+
+          {error ? (
+            <p
+              role="alert"
+              className="mx-6 mt-4 rounded-md border border-owe/30 bg-owe-subtle px-3 py-2 text-sm text-owe"
+            >
+              {error}
+            </p>
+          ) : null}
 
           <div className="flex flex-col gap-4 px-6 pt-4">
             <div className="flex flex-col gap-1.5">

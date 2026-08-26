@@ -22,6 +22,33 @@ import type { ActivityRow } from "@/lib/types";
  * The relative string is computed on the server and passed down: deriving it
  * here from a live clock would differ between the server render and hydration.
  */
+/** Labelled facts: the label sits above its value, so "From Anas" cannot be
+ *  misread as a sentence and the values line up in a row. */
+function Facts({
+  items,
+}: {
+  items: { label: string; value: string; mono?: boolean }[];
+}) {
+  return (
+    <dl className="flex flex-wrap gap-x-8 gap-y-3">
+      {items.map((item) => (
+        <div key={item.label}>
+          <dt className="text-[0.625rem] font-medium uppercase tracking-wider text-text-tertiary">
+            {item.label}
+          </dt>
+          <dd
+            className={`mt-0.5 text-xs capitalize text-text-primary ${
+              item.mono ? "tabular font-mono normal-case" : ""
+            }`}
+          >
+            {item.value}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 export function ActivityRowItem({
   row,
   groupId,
@@ -40,19 +67,23 @@ export function ActivityRowItem({
   const [error, setError] = useState<string | null>(null);
 
   async function remove() {
-    // Deleting an expense changes what everyone owes, so this is one of the
-    // few places a confirmation genuinely earns its interruption.
+    // An expense deletion needs confirming — it destroys a record of something
+    // that happened. Undoing a settlement does not: the row just says money
+    // moved, so removing it is exact and nothing real needs reversing.
     if (
-      !window.confirm(
-        `Delete "${row.kind === "expense" ? row.title : "this settlement"}"? Everyone's balance will change.`,
-      )
+      row.kind === "expense" &&
+      !window.confirm(`Delete "${row.title}"? Everyone's balance will change.`)
     ) {
       return;
     }
     setPending(true);
     setError(null);
     try {
-      await groupsApi.deleteExpense(groupId, row.id);
+      if (row.kind === "expense") {
+        await groupsApi.deleteExpense(groupId, row.id);
+      } else {
+        await groupsApi.deleteSettlement(groupId, row.id);
+      }
       router.refresh();
     } catch (err) {
       setError(
@@ -157,20 +188,16 @@ export function ActivityRowItem({
         <div className="border-t border-border-subtle bg-bg-primary/60 px-4 py-3">
           {row.kind === "expense" ? (
             <>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-secondary">
-                <span>
-                  Category <span className="text-text-primary">{row.category}</span>
-                </span>
-                <span>
-                  Split{" "}
-                  <span className="capitalize text-text-primary">
-                    {row.splitType === "equal" ? "equally" : row.splitType}
-                  </span>
-                </span>
-                <span>
-                  Date <span className="text-text-primary">{row.fullDate}</span>
-                </span>
-              </div>
+              <Facts
+                items={[
+                  { label: "Category", value: row.category },
+                  {
+                    label: "Split",
+                    value: row.splitType === "equal" ? "Equally" : row.splitType,
+                  },
+                  { label: "Date", value: row.fullDate },
+                ]}
+              />
 
               <ul className="mt-3 flex flex-col gap-1.5">
                 {row.splits.map((split) => (
@@ -210,25 +237,69 @@ export function ActivityRowItem({
               ) : null}
             </>
           ) : (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-secondary">
-              <span>
-                From <span className="text-text-primary">{row.from}</span>
-              </span>
-              <span>
-                To <span className="text-text-primary">{row.to}</span>
-              </span>
-              <span>
-                Date <span className="text-text-primary">{row.fullDate}</span>
-              </span>
-              {converted ? (
-                <span>
-                  Converted{" "}
-                  <span className="tabular font-mono text-text-primary">
-                    {formatMoney(row.convertedMinor, groupCurrency)}
-                  </span>
+            <>
+              {/* The payment as a picture, matching how the record dialog
+                  states it — a run of "From x  To y" is the one thing people
+                  read backwards. */}
+              <div className="flex flex-wrap items-center gap-3 rounded-md border border-border bg-surface px-3.5 py-3">
+                <Avatar name={row.from} color={row.fromColor} size="sm" />
+                <span className="text-sm font-medium">{row.from}</span>
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  className="size-4 shrink-0 text-text-tertiary"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+                <Avatar name={row.to} color={row.toColor} size="sm" />
+                <span className="text-sm font-medium">{row.to}</span>
+                <span className="tabular ms-auto font-mono text-sm font-semibold text-owed">
+                  {formatMoney(row.amountMinor, row.currency)}
                 </span>
+              </div>
+
+              <div className="mt-3">
+                <Facts
+                  items={[
+                    { label: "Recorded", value: row.fullDate },
+                    ...(converted
+                      ? [
+                          {
+                            label: `Converted to ${groupCurrency}`,
+                            value: formatMoney(row.convertedMinor, groupCurrency),
+                            mono: true,
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
+              </div>
+
+              {canEdit ? (
+                <div className="mt-3 flex items-center gap-2 border-t border-border-subtle pt-3">
+                  <Button
+                    type="button"
+                    variant="danger"
+                    disabled={pending}
+                    onClick={remove}
+                    className="h-8 px-3 text-xs"
+                  >
+                    <TrashIcon />
+                    {pending ? "Undoing…" : "Undo this payment"}
+                  </Button>
+                  {error ? (
+                    <span role="alert" className="text-xs font-medium text-owe">
+                      {error}
+                    </span>
+                  ) : null}
+                </div>
               ) : null}
-            </div>
+            </>
           )}
         </div>
       ) : null}

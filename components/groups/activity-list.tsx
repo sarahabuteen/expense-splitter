@@ -1,3 +1,5 @@
+"use client";
+
 import { ActivityRowItem } from "./activity-row";
 import { EmptyLedgerIllustration } from "@/components/ui/empty-illustration";
 import type { ActivityRow } from "@/lib/types";

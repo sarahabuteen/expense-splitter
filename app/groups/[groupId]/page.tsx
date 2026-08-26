@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { notFound } from "next/navigation";
 
-import { ActivityList } from "@/components/groups/activity-list";
+import { Ledger } from "@/components/groups/ledger";
 import { ExpenseComposer } from "@/components/expenses/expense-composer";
 import { AvatarStack } from "@/components/ui/avatar";
 import { BalanceRail } from "@/components/groups/balance-rail";
@@ -23,10 +23,6 @@ export default async function GroupPage({ params }: PageProps<"/groups/[groupId]
   const { groupId } = await params;
   const group = await getGroup(groupId);
   if (!group) notFound();
-
-  const rows = group.activity;
-  const expenses = rows.filter((r) => r.kind === "expense").length;
-  const settlements = rows.length - expenses;
 
   // No max-width and no mx-auto: the sidebar already narrows the pane, so any
   // further cap just reintroduces dead space. The activity column flexes and
@@ -88,41 +84,14 @@ export default async function GroupPage({ params }: PageProps<"/groups/[groupId]
       <hr className="mt-6 border-border" />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_var(--container-detail)]">
-        <section>
+        <div className="flex flex-col gap-6">
           <ExpenseComposer
             groupId={group.id}
             members={group.members}
             currency={group.currency}
           />
-
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-            <button
-              type="button"
-              className="flex h-9 items-center gap-2 rounded-md px-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-bg-tertiary hover:text-text-primary"
-            >
-              <FilterIcon />
-              Filters
-            </button>
-          </div>
-
-          <div className="mt-3 flex flex-wrap items-baseline justify-between gap-3">
-            <h2 className="text-lg font-bold tracking-tight text-text-primary">Activity</h2>
-            <p className="text-xs text-text-secondary">
-              {expenses} expenses
-              <span aria-hidden="true" className="mx-1.5">·</span>
-              {settlements} settlements
-            </p>
-          </div>
-
-          <div className="mt-3">
-            <ActivityList
-              rows={rows}
-              groupId={group.id}
-              groupCurrency={group.currency}
-              canEdit={!group.isDemo}
-            />
-          </div>
-        </section>
+          <Ledger group={group} />
+        </div>
 
         <aside className="lg:sticky lg:top-6 lg:self-start">
           <BalanceRail group={group} />
@@ -161,13 +130,6 @@ function PlusIcon() {
   );
 }
 
-function FilterIcon() {
-  return (
-    <svg {...iconProps()}>
-      <path d="M3 6h18M6 12h12M10 18h4" />
-    </svg>
-  );
-}
 
 function ReceiptIcon() {
   return (

@@ -18,12 +18,18 @@ export function DatePicker({
   onChange,
   max,
   id,
+  placeholder = "Pick a date",
+  clearable = false,
 }: {
+  /** ISO date, or "" when nothing is chosen — filters legitimately have no date. */
   value: string;
   onChange: (next: string) => void;
   /** ISO date; days after this are not selectable. */
   max?: string;
   id?: string;
+  placeholder?: string;
+  /** Offers a Clear action, for optional fields like a date-range filter. */
+  clearable?: boolean;
 }) {
   const reactId = useId();
   const gridId = `${reactId}-grid`;
@@ -86,7 +92,9 @@ export function DatePicker({
         className="inline-flex h-10 items-center gap-2 rounded-md border border-border bg-bg-primary px-3 text-sm transition-colors hover:border-accent"
       >
         <CalendarIcon />
-        <span className="tabular font-mono">{value}</span>
+        <span className={value ? "tabular font-mono" : "text-text-secondary"}>
+          {value || placeholder}
+        </span>
       </button>
 
       {open && anchor ? (
@@ -168,6 +176,21 @@ export function DatePicker({
               );
             })}
           </div>
+
+          {clearable && value ? (
+            <div className="mt-2 border-t border-border pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  onChange("");
+                  setOpen(false);
+                }}
+                className="w-full rounded px-2 py-1.5 text-xs text-text-secondary transition-colors hover:bg-bg-tertiary hover:text-text-primary"
+              >
+                Clear date
+              </button>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </>
@@ -201,9 +224,17 @@ function isoToday(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/**
+ * Falls back to the current month when there is no valid date.
+ *
+ * An empty value is a real state — a date-range filter starts with none — and
+ * without this guard it produced an Invalid Date, whose NaN month made
+ * monthGrid call Array(NaN) and throw RangeError: Invalid array length.
+ */
 function startOfMonth(iso: string): Date {
   const d = new Date(`${iso}T00:00:00Z`);
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
+  const base = Number.isNaN(d.getTime()) ? new Date() : d;
+  return new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), 1));
 }
 
 function addMonths(date: Date, delta: number): Date {
@@ -211,7 +242,8 @@ function addMonths(date: Date, delta: number): Date {
 }
 
 function addDays(iso: string, delta: number): string {
-  const d = new Date(`${iso}T00:00:00Z`);
+  const parsed = new Date(`${iso}T00:00:00Z`);
+  const d = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
   d.setUTCDate(d.getUTCDate() + delta);
   return d.toISOString().slice(0, 10);
 }
@@ -220,6 +252,7 @@ function addDays(iso: string, delta: number): string {
 function monthGrid(month: Date): (string | null)[] {
   const year = month.getUTCFullYear();
   const m = month.getUTCMonth();
+  if (!Number.isFinite(year) || !Number.isFinite(m)) return [];
   const first = new Date(Date.UTC(year, m, 1));
   const lead = (first.getUTCDay() + 6) % 7;
   const count = new Date(Date.UTC(year, m + 1, 0)).getUTCDate();

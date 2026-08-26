@@ -140,6 +140,7 @@ export function SettlePlan({ group }: { group: GroupDetail }) {
       <RecordSettlementDialog
         key={recording ? `${recording.fromId}-${recording.toId}` : "idle"}
         payment={recording}
+        groupId={group.id}
         currency={group.currency}
         viewerName={viewerName}
         onClose={() => setRecording(null)}
