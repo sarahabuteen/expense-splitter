@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# challenge reference material (not part of the app)
+/spec
+/guidance
+/data

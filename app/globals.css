@@ -1,26 +1,230 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   Palette proposal — dusty orchid brand on warm mauve-tinted neutrals.
+   Balance direction is teal vs berry (never green/red): the two differ in hue,
+   warmth AND lightness, so they survive colour-blindness and greyscale.
+   Berry sits nearer the plum brand than the earlier terracotta did; they stay
+   apart because brand appears as large fills and negative as small figures.
+--------------------------------------------------------------------------- */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --page: #fbf8f9;
+  --surface: #ffffff;
+  --surface-2: #f4eff1;
+  --line: #e7dde2;
+  --ink: #221c20;
+  --ink-muted: #6e626a;
+  --brand: #8a4f76;
+  --brand-ink: #ffffff;
+  --brand-soft: #f6eaf1;
+  --positive: #0f6f63;
+  --negative: #a5304c;
+
+  /* Member avatars. Ten hues, all >=5:1 on white, deliberately avoiding the
+     teal (owed), berry (owe) and plum (brand) hue zones so a member's colour
+     can never be mistaken for a balance direction. */
+  --avatar-clay: #a35933;
+  --avatar-gold: #806a28;
+  --avatar-olive: #647425;
+  --avatar-fern: #417826;
+  --avatar-steel: #2f7293;
+  --avatar-cobalt: #4567c4;
+  --avatar-indigo: #6b5ccc;
+  --avatar-violet: #864dc7;
+  --avatar-mauve: #a13dc2;
+  --avatar-slate: #5e6482;
+
+  /* Elevation: hairline structure first, shadows only for floating surfaces */
+  --shadow-sm: 0 1px 2px rgb(34 28 32 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(34 28 32 / 0.07), 0 2px 4px -2px rgb(34 28 32 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(34 28 32 / 0.08), 0 4px 6px -4px rgb(34 28 32 / 0.04);
+
+  /* Native scrollbars, caret and form controls follow the theme */
+  color-scheme: light;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
+/* System-dark, unless the viewer has explicitly chosen light */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    --page: #171316;
+    --surface: #1f1a1e;
+    --surface-2: #292228;
+    --line: #382f36;
+    --ink: #f3edf0;
+    --ink-muted: #a99da5;
+    --brand: #d9a0c4;
+    --brand-ink: #2a1622;
+    --brand-soft: #2e2130;
+    --positive: #5fd1bc;
+    --negative: #f28ba0;
+
+    --avatar-clay: #d29779;
+    --avatar-gold: #c6a953;
+    --avatar-olive: #afc653;
+    --avatar-fern: #79c653;
+    --avatar-steel: #6eaecf;
+    --avatar-cobalt: #90a4da;
+    --avatar-indigo: #a89fdf;
+    --avatar-violet: #b898dd;
+    --avatar-mauve: #c890da;
+    --avatar-slate: #a0a5ba;
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+
+    color-scheme: dark;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Explicit choice wins in both directions */
+:root[data-theme="dark"] {
+  --page: #171316;
+  --surface: #1f1a1e;
+  --surface-2: #292228;
+  --line: #382f36;
+  --ink: #f3edf0;
+  --ink-muted: #a99da5;
+  --brand: #d9a0c4;
+  --brand-ink: #2a1622;
+  --brand-soft: #2e2130;
+  --positive: #5fd1bc;
+  --negative: #f28ba0;
+
+  --avatar-clay: #d29779;
+  --avatar-gold: #c6a953;
+  --avatar-olive: #afc653;
+  --avatar-fern: #79c653;
+  --avatar-steel: #6eaecf;
+  --avatar-cobalt: #90a4da;
+  --avatar-indigo: #a89fdf;
+  --avatar-violet: #b898dd;
+  --avatar-mauve: #c890da;
+  --avatar-slate: #a0a5ba;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-positive: var(--positive);
+  --color-negative: var(--negative);
+
+  --color-avatar-clay: var(--avatar-clay);
+  --color-avatar-gold: var(--avatar-gold);
+  --color-avatar-olive: var(--avatar-olive);
+  --color-avatar-fern: var(--avatar-fern);
+  --color-avatar-steel: var(--avatar-steel);
+  --color-avatar-cobalt: var(--avatar-cobalt);
+  --color-avatar-indigo: var(--avatar-indigo);
+  --color-avatar-violet: var(--avatar-violet);
+  --color-avatar-mauve: var(--avatar-mauve);
+  --color-avatar-slate: var(--avatar-slate);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  --font-sans: var(--font-plex-arabic);
+  --font-mono: var(--font-plex-mono);
+
+  /* Type scale — 1.25 major third anchored at 16px, per the brand kit */
+  --text-xs: 0.6875rem;
+  --text-xs--line-height: 1.45;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.45;
+  --text-base: 1rem;
+  --text-base--line-height: 1.55;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.4;
+  --text-xl: 1.5625rem;
+  --text-xl--line-height: 1.3;
+  --text-2xl: 1.9375rem;
+  --text-2xl--line-height: 1.25;
+  --text-3xl: 2.4375rem;
+  --text-3xl--line-height: 1.2;
+
+  /* 4px base unit */
+  --spacing: 0.25rem;
+
+  /* Tight radii keep the UI precise; large ones are for modals and avatars */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+}
+
+@layer base {
+  /* Tailwind v4 defaults `border` to currentColor, which would paint every
+     divider in text colour. Default it to the palette instead. */
+  *,
+  ::after,
+  ::before {
+    border-color: var(--line);
+  }
+
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--font-plex-arabic), system-ui, sans-serif;
+  }
+
+  /* One visible focus ring everywhere, in brand, for keyboard users. */
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: var(--brand-soft);
+    color: var(--ink);
+  }
+
+  /* Checkboxes and radios — the split editor is full of them. */
+  input,
+  select,
+  textarea {
+    accent-color: var(--brand);
+  }
+
+  ::placeholder {
+    color: var(--ink-muted);
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  hr {
+    border-color: var(--line);
+  }
+
+  /* Amounts default to the mono face; no component has to remember. */
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+  }
+}
+
+/* Money columns must align. As a @utility so variants (sm:, hover:) work. */
+@utility tabular {
+  font-variant-numeric: tabular-nums;
 }
