@@ -52,8 +52,13 @@ export function GroupSettings({ group }: { group: GroupSummary }) {
     setSaved(false);
     try {
       await action();
-      router.refresh();
+      // Navigate BEFORE refreshing. router.refresh() refetches the CURRENT
+      // route, and the sidebar lives in the groups layout — refreshing while
+      // still on a deleted group's page re-reads a route that no longer
+      // exists, and the navigation that follows can then serve a cached entry
+      // with the deleted group still in the nav.
       after?.();
+      router.refresh();
     } catch (err) {
       setError(
         err instanceof ApiError

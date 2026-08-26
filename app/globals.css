@@ -197,6 +197,70 @@ dialog::backdrop {
   backdrop-filter: blur(2px);
 }
 
+/*
+  Landing-page animation.
+
+  Two pieces: a one-shot entrance for the page itself, and a looping
+  three-scene demo that walks through log -> balances -> settle.
+
+  Only opacity and transform are animated — both composited, so nothing here
+  triggers layout or paint. No JavaScript, so it adds nothing to the bundle and
+  cannot delay time-to-interactive.
+
+  Base styles show scene one and hide the rest, and the animation is declared
+  only inside prefers-reduced-motion: no-preference. A browser that never runs
+  it shows a complete, still first scene rather than three stacked on top of
+  each other.
+*/
+
+.demo-scene {
+  grid-area: 1 / 1;
+  opacity: 0;
+}
+
+.demo-scene-1 {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .animate-rise {
+    animation: rise 600ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+
+  .delay-1 { animation-delay: 80ms; }
+  .delay-2 { animation-delay: 160ms; }
+  .delay-3 { animation-delay: 240ms; }
+  .delay-4 { animation-delay: 320ms; }
+  .delay-5 { animation-delay: 400ms; }
+
+  /* One 15s loop, three scenes, each held for about five seconds. */
+  @keyframes scene {
+    0% { opacity: 0; transform: translateY(10px); }
+    4% { opacity: 1; transform: none; }
+    28% { opacity: 1; transform: none; }
+    33% { opacity: 0; transform: translateY(-10px); }
+    100% { opacity: 0; transform: translateY(-10px); }
+  }
+
+  .demo-scene {
+    animation: scene 15s ease-in-out infinite;
+  }
+
+  .demo-scene-2 { animation-delay: 5s; }
+  .demo-scene-3 { animation-delay: 10s; }
+}
+
 /* Money columns must align. As a @utility so variants work. */
 @utility tabular {
   font-variant-numeric: tabular-nums;
