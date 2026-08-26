@@ -41,7 +41,7 @@ export async function GroupScreen({
   // further cap just reintroduces dead space. The activity column flexes and
   // the detail rail is fixed, so the two of them fill whatever is left.
   return (
-    <main className="w-full flex-1 px-5 py-8 sm:px-7 sm:py-10">
+    <main id="main" className="w-full flex-1 px-5 py-8 sm:px-7 sm:py-10">
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
         <div className="min-w-0">
           <h1 className="text-2xl font-extrabold tracking-tight text-text-primary">
@@ -110,7 +110,7 @@ export async function GroupScreen({
           usedCategories={group.usedCategories}
         />
 
-        <aside className="min-w-0 lg:sticky lg:top-6 lg:self-start">
+        <aside aria-label="Your balance and settlements" className="min-w-0 lg:sticky lg:top-6 lg:self-start">
           <BalanceRail group={group} />
         </aside>
       </div>

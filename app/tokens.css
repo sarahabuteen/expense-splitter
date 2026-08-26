@@ -38,18 +38,18 @@
 
   --color-text-primary: #131a26;
   --color-text-secondary: #566073;
-  --color-text-tertiary: #646e7c;
+  --color-text-tertiary: #5f6875;
 
   --color-accent: #2a62d6;
   --color-accent-hover: #2156c9;
   --color-accent-subtle: #e7eefc;
 
-  --color-success: #0a7e55;
+  --color-success: #0a7350;
   --color-warning: #b5790a;
-  --color-error: #d32637;
+  --color-error: #c62030;
 
-  --color-owe: #d32637;
-  --color-owed: #0a7e55;
+  --color-owe: #c62030;
+  --color-owed: #0a7350;
   --color-owe-subtle: #fce7ea;
   --color-owed-subtle: #dcf1e9;
 
@@ -128,19 +128,32 @@
   --color-danger-hover: #b31f2e;
   --color-danger-foreground: #ffffff;
 
+  /* Project addition: an accent FILL, for the same reason --color-danger
+     exists. --color-accent is tuned to be READ against the page: in dark mode
+     it lightens to #5b8def, where white text measures 3.23:1 and fails AA. A
+     solid button needs a blue dark enough to carry white, in both themes. */
+  --color-accent-solid: #2a62d6;
+  --color-accent-solid-hover: #2156c9;
+  --color-accent-foreground: #ffffff;
+
   /* Project addition: member avatar colours, taken from the sample data.
      Not part of the shipped palette — against the near-monochrome UI these are
      the one place colour is allowed to pop, for member identity only. */
-  --color-avatar-indigo: #6366f1;
+  --color-avatar-indigo: #7c7ef3;
   --color-avatar-amber: #f59e0b;
   --color-avatar-pink: #ec4899;
   --color-avatar-teal: #14b8a6;
-  --color-avatar-violet: #8b5cf6;
+  --color-avatar-violet: #9970f7;
   --color-avatar-orange: #f97316;
   --color-avatar-cyan: #06b6d4;
   --color-avatar-emerald: #10b981;
   --color-avatar-rose: #f43f5e;
   --color-avatar-blue: #3b82f6;
+
+  /* Initials are ink, not white: white clears 4.5:1 on none of these hues
+     (amber measures 2.15:1), while #131a26 clears it on all ten. Indigo and
+     violet are lightened above for the same reason. */
+  --color-avatar-foreground: #131a26;
 }
 
 /* Dark mode: cool graphite (primary showcase; the preview uses it).
@@ -158,7 +171,7 @@
 
     --color-text-primary: #e7ebf2;
     --color-text-secondary: #8b94a6;
-    --color-text-tertiary: #788294;
+    --color-text-tertiary: #7d8799;
 
     --color-accent: #5b8def;
     --color-accent-hover: #7fa6f5;
@@ -188,6 +201,9 @@
     --color-danger-hover: #d93b4a;
     --color-danger-foreground: #ffffff;
 
+    --color-accent-solid: #3a6fd4;
+    --color-accent-solid-hover: #3568cc;
+
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
@@ -208,7 +224,7 @@
 
   --color-text-primary: #e7ebf2;
   --color-text-secondary: #8b94a6;
-  --color-text-tertiary: #788294;
+  --color-text-tertiary: #7d8799;
 
   --color-accent: #5b8def;
   --color-accent-hover: #7fa6f5;
@@ -237,6 +253,9 @@
   --color-danger: #c62b3a;
   --color-danger-hover: #d93b4a;
   --color-danger-foreground: #ffffff;
+
+  --color-accent-solid: #3a6fd4;
+  --color-accent-solid-hover: #3568cc;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);

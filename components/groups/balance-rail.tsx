@@ -43,7 +43,18 @@ export function BalanceRail({ group }: { group: GroupPage }) {
             <p className="text-sm text-text-secondary">
               {settled ? "All settled up" : owed ? "You are owed" : "You owe"}
             </p>
+            {/* The figure reads as bare currency on its own; the direction is
+                in a separate line above and a colour that carries no meaning
+                to a screen reader. The label puts the whole sentence together. */}
             <p
+              aria-label={
+                settled
+                  ? "You are all settled up."
+                  : `${owed ? "You are owed" : "You owe"} ${formatMoney(
+                      Math.abs(group.yourBalanceMinor),
+                      group.currency,
+                    )} across this group.`
+              }
               className={`tabular mt-1 font-mono text-xl font-semibold leading-none ${
                 settled ? "text-text-primary" : owed ? "text-owed" : "text-owe"
               }`}
@@ -98,6 +109,11 @@ export function BalanceRail({ group }: { group: GroupPage }) {
                 {owedToViewer ? `${yours.from} owes you` : `You owe ${yours.to}`}
               </p>
               <p
+                aria-label={
+                  owedToViewer
+                    ? `${yours.from} owes you ${formatMoney(yours.amountMinor, group.currency)}.`
+                    : `You owe ${yours.to} ${formatMoney(yours.amountMinor, group.currency)}.`
+                }
                 className={`tabular mt-0.5 font-mono text-sm font-medium ${
                   owedToViewer ? "text-owed" : "text-owe"
                 }`}
@@ -166,6 +182,14 @@ export function BalanceRail({ group }: { group: GroupPage }) {
                   {m.name}
                 </span>
                 <span
+                  aria-label={
+                    memberSettled
+                      ? `${m.name} is settled up.`
+                      : `${m.name} ${m.balanceMinor > 0 ? "is owed" : "owes"} ${formatMoney(
+                          Math.abs(m.balanceMinor),
+                          group.currency,
+                        )}.`
+                  }
                   className={`tabular shrink-0 font-mono text-sm ${
                     memberSettled
                       ? "text-text-secondary"

@@ -19,7 +19,7 @@ export default async function GroupsIndexPage() {
   }
 
   return (
-    <main className="w-full flex-1 px-5 py-10 sm:px-7">
+    <main id="main" className="w-full flex-1 px-5 py-10 sm:px-7">
       <div className="w-full">
         <GroupsEmptyState />
       </div>

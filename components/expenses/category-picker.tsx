@@ -87,8 +87,10 @@ export function CategoryPicker({
 
       {adding ? (
         <div className="flex flex-wrap items-center gap-2">
-          <label className="flex-1">
-            <span className="sr-only">New category name</span>
+          <label className="flex flex-1 flex-col gap-1.5">
+            <span className="text-xs font-medium text-text-secondary">
+              New category name
+            </span>
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}

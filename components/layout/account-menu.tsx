@@ -90,7 +90,7 @@ export function AccountMenu({ account }: { account: Account | null }) {
           <span
             aria-hidden="true"
             className={`grid size-7 shrink-0 place-items-center rounded-full text-[0.625rem] font-semibold ${
-              account ? "bg-accent text-white" : "border border-border text-text-secondary"
+              account ? "bg-accent-solid text-accent-foreground" : "border border-border text-text-secondary"
             }`}
           >
             {account ? account.name.slice(0, 1).toUpperCase() : "G"}

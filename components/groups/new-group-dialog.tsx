@@ -140,6 +140,9 @@ function NewGroupDialog({
         <div className="flex flex-col gap-1.5">
           <label htmlFor="ng-name" className="text-sm font-medium">
             Group name
+            <span aria-hidden="true" className="ms-1 text-owe">
+              *
+            </span>
           </label>
           <input
             id="ng-name"

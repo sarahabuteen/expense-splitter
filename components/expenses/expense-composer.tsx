@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { ApiError, groupsApi } from "@/lib/client/api";
+import { useAnnounce } from "@/components/a11y/announcer";
 import { useGuestGate } from "@/components/auth/guest-gate";
 
 import { Avatar } from "@/components/ui/avatar";
@@ -17,6 +18,8 @@ import { SplitEditor } from "./split-editor";
 import { SplitPreview } from "./split-preview";
 import { RateField } from "./rate-field";
 import { AMOUNT_FIELD_ID } from "./add-expense-button";
+
+const DESCRIPTION_FIELD_ID = "composer-description";
 import { decimalsFor } from "@/lib/currencies";
 import { formatMoney } from "@/lib/format";
 import {
@@ -59,6 +62,7 @@ export function ExpenseComposer({
   onCancelEdit?: () => void;
 }) {
   const router = useRouter();
+  const announce = useAnnounce();
   const { requestWrite, isGuest } = useGuestGate();
   const viewer = members.find((m) => m.isViewer) ?? members[0];
   const [pending, setPending] = useState(false);
@@ -183,6 +187,14 @@ export function ExpenseComposer({
       } else {
         await groupsApi.createExpense(groupId, body);
       }
+      // The form empties itself and the totals change behind it; neither is
+      // something a screen reader would otherwise report.
+      announce(
+        `${editing ? "Expense saved" : "Expense added"}: ${description.trim()}, ${formatMoney(
+          totalMinor,
+          expenseCurrency,
+        )}.`,
+      );
       // Reset to the fast-path defaults so the next one is two fields again.
       setAmountText("");
       setDescription("");
@@ -245,20 +257,30 @@ export function ExpenseComposer({
           });
         }}
       >
-        {/* The fast path: amount and description, nothing else. */}
-        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+        {/* The fast path: amount and description, nothing else.
+            Both labels are visible, not sr-only: a placeholder disappears the
+            moment you type, so it cannot be the only thing naming a field —
+            and the amount is the one field nobody should have to guess at. */}
+        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-end">
           {/* The amount is the critical data, so it gets the visual weight —
               a joined control with the symbol fixed to the left of the field. */}
-          <div
-            className={`flex h-10 items-stretch overflow-hidden rounded-md border bg-bg-primary transition-colors sm:w-44 ${
-              amountError ? "border-owe" : "border-border focus-within:border-accent"
-            }`}
-          >
-            <span className="grid w-11 shrink-0 place-items-center border-e border-border bg-bg-tertiary font-mono text-sm text-text-secondary">
-              <CurrencySymbol code={expenseCurrency} />
-            </span>
-            <label className="min-w-0 flex-1">
-              <span className="sr-only">Amount</span>
+          <div className="flex flex-col gap-1.5 sm:w-44">
+            <label htmlFor={AMOUNT_FIELD_ID} className="text-xs font-medium text-text-secondary">
+              Amount
+              <span aria-hidden="true" className="ms-1 text-owe">
+                *
+              </span>
+            </label>
+            {/* focus-ring-within: the ring belongs to the joined control, since
+                the input inside suppresses its own outline. */}
+            <div
+              className={`focus-ring-within flex h-10 items-stretch overflow-hidden rounded-md border bg-bg-primary transition-colors ${
+                amountError ? "border-owe" : "border-border focus-within:border-accent"
+              }`}
+            >
+              <span className="grid w-11 shrink-0 place-items-center border-e border-border bg-bg-tertiary font-mono text-sm text-text-secondary">
+                <CurrencySymbol code={expenseCurrency} />
+              </span>
               <input
                 id={AMOUNT_FIELD_ID}
                 value={amountText}
@@ -266,22 +288,30 @@ export function ExpenseComposer({
                 // decimal, not numeric: numeric hides the decimal point on iOS.
                 inputMode="decimal"
                 placeholder="0.00"
+                aria-required
                 aria-invalid={amountError ? true : undefined}
                 aria-describedby={amountError ? "composer-amount-error" : "composer-summary"}
-                className="tabular h-full w-full bg-transparent px-3 font-mono text-base outline-none"
+                className="tabular h-full min-w-0 flex-1 bg-transparent px-3 font-mono text-base outline-none"
               />
-            </label>
+            </div>
           </div>
 
-          <label className="min-w-0 flex-1">
-            <span className="sr-only">What was it for?</span>
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <label htmlFor={DESCRIPTION_FIELD_ID} className="text-xs font-medium text-text-secondary">
+              What was it for?
+              <span aria-hidden="true" className="ms-1 text-owe">
+                *
+              </span>
+            </label>
             <input
+              id={DESCRIPTION_FIELD_ID}
+              aria-required
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="What was it for?"
+              placeholder="Dinner, taxi, tickets…"
               className="h-10 w-full rounded-md border border-border bg-bg-primary px-3 text-base transition-colors focus:border-accent"
             />
-          </label>
+          </div>
 
           <div className="flex shrink-0 gap-2">
             <Button

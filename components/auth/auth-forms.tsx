@@ -157,7 +157,7 @@ function SubmitButton({
       disabled={pending}
       // aria-busy rather than only a label swap, so the state is announced.
       aria-busy={pending}
-      className="h-11 rounded-md bg-accent px-4 font-semibold text-white shadow-sm
+      className="h-11 rounded-md bg-accent-solid px-4 font-semibold text-accent-foreground shadow-sm
                  transition-all hover:opacity-90 active:scale-[0.99]
                  disabled:cursor-not-allowed disabled:opacity-70 disabled:active:scale-100"
     >

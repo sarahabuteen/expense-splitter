@@ -35,7 +35,7 @@ export default async function SettlePage({
   const movedMinor = direct.reduce((sum, p) => sum + p.amountMinor, 0);
 
   return (
-    <main className="w-full flex-1 px-5 py-8 sm:px-7 sm:py-10">
+    <main id="main" className="w-full flex-1 px-5 py-8 sm:px-7 sm:py-10">
       <Breadcrumb
         trail={[
           { label: "Groups", href: "/groups" },
@@ -82,7 +82,7 @@ export default async function SettlePage({
             currency={group.currency}
           />
         </div>
-        <aside className="lg:sticky lg:top-6 lg:self-start">
+        <aside aria-label="Group totals" className="lg:sticky lg:top-6 lg:self-start">
           <SettleRail group={group} />
         </aside>
       </div>

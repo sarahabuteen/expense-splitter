@@ -38,7 +38,7 @@ export function Sidebar({
         href="/groups"
         className="flex items-center gap-2.5 px-5 py-5 text-text-primary transition-opacity hover:opacity-80"
       >
-        <span className="grid size-7 place-items-center rounded-md bg-accent text-white">
+        <span className="grid size-7 place-items-center rounded-md bg-accent-solid text-accent-foreground">
           <Logo className="size-[18px]" />
         </span>
         <span className="font-bold tracking-tight">Expense Splitter</span>
@@ -107,7 +107,17 @@ export function Sidebar({
                     />
                   ) : null}
                   <span className="truncate">{group.name}</span>
+                  {/* Without this the row reads "Apartment 4B, plus 2,267.09":
+                      a sign is not a sentence. */}
                   <span
+                    aria-label={
+                      settled
+                        ? "settled up"
+                        : `${group.yourBalanceMinor > 0 ? "you are owed" : "you owe"} ${formatMoney(
+                            Math.abs(group.yourBalanceMinor),
+                            group.currency,
+                          )}`
+                    }
                     className={`tabular shrink-0 font-mono text-xs ${
                       settled
                         ? "text-text-secondary"
@@ -135,7 +145,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={open}
-            className="mb-2 flex w-full items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
+            className="mb-2 flex w-full items-center justify-center gap-2 rounded-md bg-accent-solid px-3 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-solid-hover"
           >
             <PlusIcon />
             New group

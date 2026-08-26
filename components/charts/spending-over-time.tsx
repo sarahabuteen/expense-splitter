@@ -44,6 +44,9 @@ export function SpendingOverTime({
       subtitle={`By month, in ${currency}`}
       table={
         <table className="w-full text-xs">
+          <caption className="sr-only">
+            Total spent in each period, in {currency}
+          </caption>
           <thead>
             <tr className="text-text-tertiary">
               <th scope="col" className="pb-1 text-start font-medium">Month</th>

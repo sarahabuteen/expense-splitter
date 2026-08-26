@@ -33,7 +33,7 @@ export function ThemeToggle() {
           title={option[0].toUpperCase() + option.slice(1)}
           className={`grid size-7 place-items-center rounded transition-colors ${
             theme === option
-              ? "bg-accent text-white"
+              ? "bg-accent-solid text-accent-foreground"
               : "text-text-secondary hover:text-text-primary"
           }`}
         >

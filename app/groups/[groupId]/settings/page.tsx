@@ -27,7 +27,7 @@ export default async function GroupSettingsPage({
   if (!group) notFound();
 
   return (
-    <main className="w-full flex-1 px-5 py-10 sm:px-7 sm:py-12">
+    <main id="main" className="w-full flex-1 px-5 py-10 sm:px-7 sm:py-12">
       <Breadcrumb
         trail={[
           { label: "Groups", href: "/groups" },

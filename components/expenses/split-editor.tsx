@@ -166,8 +166,11 @@ export function SplitEditor({
         })}
       </ul>
 
-      <p className="text-xs text-text-secondary">
-        {participants.length} of {members.length} selected
+      {/* role="status": ticking a checkbox announces that one box, not what it
+          did to the group, and "who is in this split" is what you are actually
+          tracking while you tick. */}
+      <p role="status" className="text-xs text-text-secondary">
+        {participants.length} of {members.length} members selected
         {totalMinor > 0 ? (
           <>
             <span aria-hidden="true" className="mx-1.5 text-border">|</span>

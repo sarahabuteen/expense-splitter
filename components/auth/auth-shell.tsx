@@ -21,7 +21,7 @@ export function AuthShell({
   footer: React.ReactNode;
 }) {
   return (
-    <main className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-5 py-12">
+    <main id="main" className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-5 py-12">
       <Backdrop />
 
       <div className="relative w-full max-w-[25rem]">

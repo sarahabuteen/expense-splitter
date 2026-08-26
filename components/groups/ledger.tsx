@@ -85,7 +85,7 @@ export function Ledger({
           <FilterIcon />
           Filters
           {active > 0 ? (
-            <span className="ms-0.5 grid size-5 place-items-center rounded-full bg-accent text-[0.625rem] font-semibold text-white">
+            <span className="ms-0.5 grid size-5 place-items-center rounded-full bg-accent-solid text-[0.625rem] font-semibold text-accent-foreground">
               {active}
             </span>
           ) : null}

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { ApiError, groupsApi } from "@/lib/client/api";
+import { useAnnounce } from "@/components/a11y/announcer";
 import { useGuestGate } from "@/components/auth/guest-gate";
 
 import { Avatar } from "@/components/ui/avatar";
@@ -42,6 +43,7 @@ export function RecordSettlementDialog({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const announce = useAnnounce();
   const { requestWrite } = useGuestGate();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +67,14 @@ export function RecordSettlementDialog({
         currency,
         date,
       });
+      // Said out loud before the dialog goes: the confirmation is the whole
+      // point of the interaction, and it is otherwise only visible as numbers
+      // quietly changing somewhere behind the closing dialog.
+      announce(
+        `Settlement recorded: ${payment.from === viewerName ? "you" : payment.from} paid ${
+          payment.to === viewerName ? "you" : payment.to
+        } ${formatMoney(entered, currency)}.`,
+      );
       onClose();
       // Balances, the plan and the timeline all live in Server Components, so
       // they have to re-read together.

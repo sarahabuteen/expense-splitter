@@ -57,6 +57,9 @@ export function MemberContributionChart({
       legend={<Legend items={legendItems} />}
       table={
         <table className="w-full text-xs">
+          <caption className="sr-only">
+            What each member paid, broken down by category, in {currency}
+          </caption>
           <thead>
             <tr className="text-text-tertiary">
               <th scope="col" className="pb-1 text-start font-medium">Member</th>

@@ -34,6 +34,7 @@ export function Dialog({
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = `${title.replace(/\W+/g, "-").toLowerCase()}-title`;
+  const descriptionId = description ? `${titleId}-description` : undefined;
 
   useEffect(() => {
     const dialog = ref.current;
@@ -53,6 +54,7 @@ export function Dialog({
         if (event.target === ref.current) onClose();
       }}
       aria-labelledby={titleId}
+      aria-describedby={descriptionId}
       style={{ width: `min(${width}, calc(100vw - 2rem))` }}
       // m-auto is load-bearing: Tailwind's preflight resets margin on every
       // element, overriding the UA stylesheet's `margin: auto` that centres an
@@ -65,7 +67,9 @@ export function Dialog({
             {title}
           </h2>
           {description ? (
-            <p className="mt-1 text-sm text-text-secondary">{description}</p>
+            <p id={descriptionId} className="mt-1 text-sm text-text-secondary">
+              {description}
+            </p>
           ) : null}
         </div>
         <Button

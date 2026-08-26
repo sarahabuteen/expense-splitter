@@ -84,7 +84,7 @@ export function MemberChipsInput({
           >
             <span
               aria-hidden="true"
-              className={`grid size-5 place-items-center rounded-full text-[0.625rem] font-semibold text-white ${DOT[chip.color]}`}
+              className={`grid size-5 place-items-center rounded-full text-[0.625rem] font-semibold text-avatar-foreground ${DOT[chip.color]}`}
             >
               {chip.name.slice(0, 1).toUpperCase()}
             </span>

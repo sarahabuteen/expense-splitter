@@ -2,7 +2,7 @@ import { Skeleton, SkeletonCard } from "@/components/ui/skeleton";
 
 export default function LoadingReports() {
   return (
-    <main className="w-full flex-1 px-5 py-8 sm:px-7 sm:py-10" aria-busy="true">
+    <main id="main" className="w-full flex-1 px-5 py-8 sm:px-7 sm:py-10" aria-busy="true">
       <span className="sr-only" role="status">
         Loading reports…
       </span>

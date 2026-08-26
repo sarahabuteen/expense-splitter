@@ -7,7 +7,7 @@ import {
 
 export default function LoadingGroup() {
   return (
-    <main className="w-full flex-1 px-5 py-8 sm:px-7 sm:py-10" aria-busy="true">
+    <main id="main" className="w-full flex-1 px-5 py-8 sm:px-7 sm:py-10" aria-busy="true">
       <span className="sr-only" role="status">
         Loading group…
       </span>
@@ -21,7 +21,7 @@ export default function LoadingGroup() {
             <SkeletonRows className="mt-4" rows={6} />
           </div>
         </div>
-        <aside className="flex flex-col gap-4">
+        <aside aria-label="Your balance and settlements" className="flex flex-col gap-4">
           <SkeletonCard lines={2} />
           <SkeletonCard lines={3} />
         </aside>

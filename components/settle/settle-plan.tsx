@@ -170,7 +170,10 @@ export function SettlePlan({ group }: { group: GroupDetail }) {
  */
 function AllSettled({ group }: { group: GroupDetail }) {
   return (
-    <div className="rounded-lg border border-border bg-surface px-6 py-12 text-center">
+    <div
+      role="status"
+      className="rounded-lg border border-border bg-surface px-6 py-12 text-center"
+    >
       <span
         aria-hidden="true"
         className="mx-auto grid size-12 place-items-center rounded-full bg-owed-subtle text-owed"

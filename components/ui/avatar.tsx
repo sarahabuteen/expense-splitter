@@ -47,7 +47,7 @@ export function Avatar({
     <span
       aria-hidden="true"
       title={name}
-      className={`inline-grid shrink-0 place-items-center rounded-full font-semibold text-white ${
+      className={`inline-grid shrink-0 place-items-center rounded-full font-semibold text-avatar-foreground ${
         SIZES[size]
       
       } ${BG[color]}`}

@@ -163,7 +163,7 @@ export function DatePicker({
                   onClick={() => pick(day)}
                   className={`tabular grid h-8 place-items-center rounded font-mono text-xs transition-colors ${
                     selected
-                      ? "bg-accent font-semibold text-white"
+                      ? "bg-accent-solid font-semibold text-accent-foreground"
                       : disabled
                         ? "cursor-not-allowed text-text-tertiary/40"
                         : day === today

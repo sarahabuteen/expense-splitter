@@ -33,7 +33,7 @@ export default async function ActivityPage({
   if (!group || !feed) notFound();
 
   return (
-    <main className="w-full flex-1 px-5 py-8 sm:px-7 sm:py-10">
+    <main id="main" className="w-full flex-1 px-5 py-8 sm:px-7 sm:py-10">
       <Breadcrumb
         trail={[
           { label: "Groups", href: "/groups" },

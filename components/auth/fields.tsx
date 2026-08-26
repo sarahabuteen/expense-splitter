@@ -45,6 +45,11 @@ export function TextField({
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-sm font-medium text-text-primary">
         {label}
+        {required ? (
+          <span aria-hidden="true" className="ms-1 text-owe">
+            *
+          </span>
+        ) : null}
       </label>
       <input
         id={id}
@@ -93,6 +98,11 @@ export function PasswordField({
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-sm font-medium text-text-primary">
         {label}
+        {required ? (
+          <span aria-hidden="true" className="ms-1 text-owe">
+            *
+          </span>
+        ) : null}
       </label>
       <div className="relative">
         <input

@@ -68,8 +68,12 @@ export function RateField({
   if (rate === null) {
     return (
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-bg-primary px-3 py-2">
-        <p className="text-xs text-text-secondary">
-          Paid in {from}; converted to {to} at the day&rsquo;s rate when saved.
+        {/* role="status": the fetch happens on a button press and reports back
+            only by swapping this text, which is otherwise silent. */}
+        <p role="status" className="text-xs text-text-secondary">
+          {loading
+            ? `Fetching the exchange rate from ${from} to ${to}…`
+            : `Paid in ${from}; converted to ${to} at the day's rate when saved.`}
         </p>
         <Button
           type="button"
@@ -125,7 +129,7 @@ export function RateField({
         </Button>
       </div>
 
-      <p id="composer-rate-note" className="mt-1.5 text-xs text-text-secondary">
+      <p id="composer-rate-note" role="status" className="mt-1.5 text-xs text-text-secondary">
         {note ??
           (valid && preview !== null ? (
             <>

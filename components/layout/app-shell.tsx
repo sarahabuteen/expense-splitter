@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { Logo } from "@/components/brand/logo";
+import { Announcer } from "@/components/a11y/announcer";
 import { GuestGateProvider } from "@/components/auth/guest-gate";
 import { NewGroupProvider } from "@/components/groups/new-group-dialog";
 import { Sidebar } from "./sidebar";
@@ -27,11 +28,25 @@ export function AppShell({
   const [open, setOpen] = useState(false);
 
   return (
+    <Announcer>
     <GuestGateProvider isGuest={isGuest}>
     <NewGroupProvider>
     <div className="flex min-h-full flex-1">
-      {/* Desktop rail */}
-      <aside className="sticky top-0 hidden h-screen w-sidebar shrink-0 border-e border-border bg-bg-secondary lg:block">
+      {/* First stop in the tab order. Off-screen until focused, so keyboard
+          users can jump the group rail without seeing it take up space. */}
+      <a
+        href="#main"
+        className="sr-only rounded-md bg-accent-solid px-4 py-2 text-sm font-semibold text-accent-foreground focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-50"
+      >
+        Skip to main content
+      </a>
+      {/* Labelled, because the group dashboard has a second <aside> for
+          balances: two unnamed complementary regions are indistinguishable in
+          a screen reader's landmark list. */}
+      <aside
+        aria-label="Groups and account"
+        className="sticky top-0 hidden h-screen w-sidebar shrink-0 border-e border-border bg-bg-secondary lg:block"
+      >
         <Sidebar groups={groups} account={account} isGuest={isGuest} />
       </aside>
 
@@ -44,7 +59,10 @@ export function AppShell({
             onClick={() => setOpen(false)}
             className="absolute inset-0 bg-text-primary/30 backdrop-blur-[2px]"
           />
-          <aside className="absolute inset-y-0 start-0 w-72 border-e border-border bg-bg-secondary shadow-lg">
+          <aside
+            aria-label="Groups and account"
+            className="absolute inset-y-0 start-0 w-72 border-e border-border bg-bg-secondary shadow-lg"
+          >
             <Sidebar groups={groups} account={account} isGuest={isGuest} />
           </aside>
         </div>
@@ -70,6 +88,7 @@ export function AppShell({
     </div>
     </NewGroupProvider>
     </GuestGateProvider>
+    </Announcer>
   );
 }
 
