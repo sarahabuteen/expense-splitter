@@ -616,9 +616,6 @@ function Chip({
     <button
       type="button"
       onClick={onClick}
-      // The label is part of the accessible name, so a screen reader hears
-      // "Paid by: change" rather than a bare "You".
-      aria-label={`${label}: change`}
       // A fixed height keeps the row even regardless of what each chip holds —
       // an avatar and an icon have different intrinsic sizes.
       className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-bg-primary pe-3 ps-1.5 text-xs text-text-primary transition-colors hover:border-accent hover:bg-accent-subtle"
@@ -626,6 +623,11 @@ function Chip({
       <span className="flex size-5 shrink-0 items-center justify-center">{icon}</span>
       <span className="text-text-secondary">{label}</span>
       <span className="font-medium">{children}</span>
+      {/* The name is built from the visible text plus this, so it reads
+          "Paid by You, change". An aria-label saying only "Paid by: change"
+          would drop the value a sighted user can see, which is the mismatch
+          WCAG 2.5.3 is about — and voice control users name what they see. */}
+      <span className="sr-only">, change</span>
     </button>
   );
 }

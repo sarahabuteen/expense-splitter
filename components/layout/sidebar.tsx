@@ -52,7 +52,9 @@ export function Sidebar({
           <button
             type="button"
             onClick={open}
-            className="-me-1.5 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium text-text-secondary transition-colors hover:bg-bg-tertiary hover:text-text-primary"
+            // h-7: a 24px minimum target, per WCAG 2.5.8. The old padding-only
+            // sizing left it 18px tall.
+            className="-me-1.5 inline-flex h-7 items-center gap-1 rounded px-2 text-xs font-medium text-text-secondary transition-colors hover:bg-bg-tertiary hover:text-text-primary"
           >
             <PlusIcon />
             Add
