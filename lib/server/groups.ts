@@ -2,7 +2,7 @@ import "server-only";
 
 import { getActor } from "@/lib/supabase/actor";
 import { createGuestClient, createRouteClient } from "@/lib/supabase/server";
-import { simplifyDebts } from "@/lib/balances";
+import { pairwiseDebts, simplifyDebts } from "@/lib/balances";
 import { formatFullDate, formatRelativeTime } from "@/lib/format";
 import type { AvatarColor } from "@/lib/avatar-colors";
 import type { ActivityRow, GroupDetail, GroupMember, GroupSummary } from "@/lib/types";
@@ -171,6 +171,7 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
         amountMinor: Number(e.amount_minor),
         currency: e.currency as string,
         splitType: e.split_type as "equal" | "exact" | "percentage" | "shares",
+        payerId: e.paid_by as string,
         convertedMinor: Number(e.converted_amount_minor),
         relativeDate: formatRelativeTime(e.date as string),
         fullDate: formatFullDate(e.date as string),
@@ -181,6 +182,7 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
             name: member?.name ?? "Someone",
             color: member?.color ?? ("indigo" as const),
             amountMinor: Number(split.amount_minor),
+            convertedAmountMinor: Number(split.converted_amount_minor),
             isPayer: split.member_id === e.paid_by,
           };
         }),
@@ -194,6 +196,8 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
         fromColor: nameOf.get(s.from_member as string)?.color ?? "indigo",
         to: nameOf.get(s.to_member as string)?.name ?? "Someone",
         toColor: nameOf.get(s.to_member as string)?.color ?? "indigo",
+        fromId: s.from_member as string,
+        toId: s.to_member as string,
         date: s.date as string,
         amountMinor: Number(s.amount_minor),
         currency: s.currency as string,
@@ -235,6 +239,7 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
     viewerPaidMinor,
     viewerShareMinor,
     plan: simplifyDebts(members),
+    directPlan: pairwiseDebts(members, activity),
   };
 }
 

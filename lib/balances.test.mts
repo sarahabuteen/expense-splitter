@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
-import { simplifyDebts, isSettled, SUGGESTION_THRESHOLD_MINOR } from "./balances";
+import { pairwiseDebts, simplifyDebts, isSettled, SUGGESTION_THRESHOLD_MINOR } from "./balances";
 import type { GroupMember } from "./types";
 
 function member(
@@ -48,7 +48,7 @@ test("every zero-sum group clears, in at most n-1 payments", () => {
     }
     for (const [id, balance] of after) {
       assert.ok(
-        Math.abs(balance) < SUGGESTION_THRESHOLD_MINOR,
+        Math.abs(balance) <= SUGGESTION_THRESHOLD_MINOR,
         `${id} left with ${balance}`,
       );
     }
@@ -84,13 +84,36 @@ test("direction survives two members sharing a name", () => {
   assert.equal(plan.yours?.toId, "other");
 });
 
-test("residual amounts below the suggestion threshold are not proposed", () => {
+test("someone whose whole position is under a unit is treated as settled", () => {
   const plan = simplifyDebts([
     member("a", "Alex", 50, true),
     member("b", "Bo", -50),
   ]);
   assert.equal(plan.yours, null, "chasing anyone for 50 cents is petty");
   assert.deepEqual(plan.others, []);
+});
+
+test("a mid-plan residue is still paid, so the plan always clears", () => {
+  // Camping Weekend's real shape: greedy leaves a 32c remainder that used to
+  // fall below the threshold and vanish, stranding one member permanently.
+  const members = [
+    member("jake", "Jake", 17779),
+    member("lily", "Lily", 7929),
+    member("omar", "Omar", -8696, true),
+    member("rachel", "Rachel", -7897),
+    member("dev", "Dev", -9115),
+  ];
+  const { yours, others } = simplifyDebts(members);
+  const payments = [...(yours ? [yours] : []), ...others];
+
+  const after = new Map(members.map((m) => [m.id, m.balanceMinor]));
+  for (const p of payments) {
+    after.set(p.fromId, after.get(p.fromId)! + p.amountMinor);
+    after.set(p.toId, after.get(p.toId)! - p.amountMinor);
+  }
+  for (const [id, balance] of after) {
+    assert.ok(Math.abs(balance) <= 1, `${id} left holding ${balance}`);
+  }
 });
 
 test("an all-settled group proposes nothing", () => {
@@ -101,4 +124,44 @@ test("an all-settled group proposes nothing", () => {
   ]);
   assert.equal(plan.yours, null);
   assert.deepEqual(plan.others, []);
+});
+
+test("direct debts net out per pair, and settlements reduce them", () => {
+  const members = [
+    member("a", "Alex", 0, true),
+    member("b", "Bo", 0),
+  ];
+  const expense = (id: string, payerId: string, owes: [string, number][]) => ({
+    kind: "expense" as const,
+    id, title: id, category: "Other", payer: "", payerColor: "indigo" as const,
+    payerId, date: "2026-01-01", amountMinor: 0, currency: "USD",
+    splitType: "equal" as const, convertedMinor: 0, relativeDate: "", fullDate: "",
+    splits: owes.map(([memberId, amount]) => ({
+      memberId, name: memberId, color: "indigo" as const,
+      amountMinor: amount, convertedAmountMinor: amount, isPayer: memberId === payerId,
+    })),
+  });
+
+  // Alex covers £30 of Bo's, Bo covers £10 of Alex's -> one £20 debt, not two.
+  const netted = pairwiseDebts(members, [
+    expense("e1", "a", [["a", 0], ["b", 3000]]),
+    expense("e2", "b", [["b", 0], ["a", 1000]]),
+  ]);
+  const all = [...(netted.yours ? [netted.yours] : []), ...netted.others];
+  assert.equal(all.length, 1, "netted into a single payment");
+  assert.equal(all[0].fromId, "b");
+  assert.equal(all[0].amountMinor, 2000);
+
+  // A recorded settlement cancels it out entirely.
+  const settled = pairwiseDebts(members, [
+    expense("e1", "a", [["a", 0], ["b", 3000]]),
+    {
+      kind: "settlement" as const, id: "s1", from: "Bo", fromColor: "indigo" as const,
+      to: "Alex", toColor: "indigo" as const, fromId: "b", toId: "a",
+      date: "2026-01-02", amountMinor: 3000, currency: "USD", convertedMinor: 3000,
+      relativeDate: "", fullDate: "",
+    },
+  ]);
+  assert.equal(settled.yours, null);
+  assert.deepEqual(settled.others, []);
 });

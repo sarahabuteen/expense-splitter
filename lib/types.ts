@@ -41,8 +41,11 @@ export type ActivityRow =
         name: string;
         color: AvatarColor;
         amountMinor: number;
+        /** In the group's currency — what pairwise debts are computed from. */
+        convertedAmountMinor: number;
         isPayer: boolean;
       }[];
+      payerId: string;
       /** In the group's currency, when the expense was paid in another. */
       convertedMinor: number;
       relativeDate: string;
@@ -55,6 +58,8 @@ export type ActivityRow =
       fromColor: AvatarColor;
       to: string;
       toColor: AvatarColor;
+      fromId: string;
+      toId: string;
       date: string;
       amountMinor: number;
       currency: string;
@@ -83,6 +88,8 @@ export type SettlementPlan = {
 
 export type GroupDetail = GroupSummary & {
   activity: ActivityRow[];
+  /** Who owes whom directly, before any simplification. */
+  directPlan: SettlementPlan;
   viewerPaidMinor: number;
   viewerShareMinor: number;
   plan: SettlementPlan;

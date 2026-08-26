@@ -1,8 +1,13 @@
+"use client";
+
+import { useState } from "react";
+
+import { RecordSettlementDialog } from "@/components/settle/record-settlement-dialog";
 import { Avatar } from "@/components/ui/avatar";
-import { ButtonLink } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { formatMoney, formatSignedMoney } from "@/lib/format";
 import { isSettled } from "@/lib/balances";
-import type { GroupDetail } from "@/lib/types";
+import type { GroupDetail, PlannedPayment } from "@/lib/types";
 
 /** The detail pane: where you stand, what to pay, and everyone's position. */
 export function BalanceRail({ group }: { group: GroupDetail }) {
@@ -15,6 +20,7 @@ export function BalanceRail({ group }: { group: GroupDetail }) {
   // Showing "$0.00 you are owed" and an empty suggestions card is noise.
   const hasActivity = group.expenseCount > 0;
   const soloMember = group.members.length < 2;
+  const [recording, setRecording] = useState<PlannedPayment | null>(null);
 
   return (
     <div className="flex flex-col gap-4">
@@ -102,12 +108,13 @@ export function BalanceRail({ group }: { group: GroupDetail }) {
                 )}
               </p>
             </div>
-            <button
+            <Button
               type="button"
-              className="shrink-0 rounded-md border border-border bg-bg-tertiary px-3 py-1.5 text-xs font-medium text-text-primary transition-colors hover:bg-surface"
+              onClick={() => setRecording(yours)}
+              className="h-8 shrink-0 px-3 text-xs"
             >
               Record
-            </button>
+            </Button>
           </div>
         ) : null}
 
@@ -130,12 +137,14 @@ export function BalanceRail({ group }: { group: GroupDetail }) {
                     <span className="tabular font-mono text-sm text-text-primary">
                       {formatMoney(p.amountMinor, group.currency)}
                     </span>
-                    <button
+                    <Button
                       type="button"
-                      className="text-xs font-medium text-text-secondary transition-colors hover:text-text-primary"
+                      variant="ghost"
+                      onClick={() => setRecording(p)}
+                      className="h-7 px-2 text-xs"
                     >
-                      Settle
-                    </button>
+                      Record
+                    </Button>
                   </div>
                 </li>
               ))}
@@ -190,6 +199,14 @@ export function BalanceRail({ group }: { group: GroupDetail }) {
           </div>
         ) : null}
       </Card>
+
+      <RecordSettlementDialog
+        key={recording ? `${recording.fromId}-${recording.toId}` : "idle"}
+        payment={recording}
+        currency={group.currency}
+        viewerName={group.members.find((m) => m.isViewer)?.name}
+        onClose={() => setRecording(null)}
+      />
     </div>
   );
 }

@@ -136,6 +136,67 @@
   }
 }
 
+/*
+  Dialog open/close animation.
+
+  Only opacity and transform are animated — both composited, so this never
+  triggers layout or paint and costs nothing on the main thread.
+
+  `allow-discrete` on display and overlay is what makes the CLOSING transition
+  run at all: without it the dialog is removed from the top layer instantly and
+  the exit animation never plays. `@starting-style` supplies the from-state for
+  the opening one.
+
+  Declared only inside prefers-reduced-motion: no-preference, so anyone asking
+  for stillness gets an instant dialog rather than a suppressed animation.
+*/
+@media (prefers-reduced-motion: no-preference) {
+  dialog {
+    opacity: 0;
+    transform: translateY(6px) scale(0.99);
+    transition:
+      opacity 160ms ease-out,
+      transform 160ms ease-out,
+      display 160ms allow-discrete,
+      overlay 160ms allow-discrete;
+  }
+
+  dialog[open] {
+    opacity: 1;
+    transform: none;
+  }
+
+  @starting-style {
+    dialog[open] {
+      opacity: 0;
+      transform: translateY(6px) scale(0.99);
+    }
+  }
+
+  dialog::backdrop {
+    opacity: 0;
+    transition:
+      opacity 160ms ease-out,
+      display 160ms allow-discrete,
+      overlay 160ms allow-discrete;
+  }
+
+  dialog[open]::backdrop {
+    opacity: 1;
+  }
+
+  @starting-style {
+    dialog[open]::backdrop {
+      opacity: 0;
+    }
+  }
+}
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.5);
+  backdrop-filter: blur(2px);
+}
+
 /* Money columns must align. As a @utility so variants work. */
 @utility tabular {
   font-variant-numeric: tabular-nums;
