@@ -52,6 +52,10 @@ export default async function GroupPage({
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          <ButtonLink href={`/groups/${group.id}/reports`}>
+            <ChartIcon />
+            Reports
+          </ButtonLink>
           <ButtonLink href={`/groups/${group.id}/settle`}>
             <SettleIcon />
             Settle up
@@ -123,6 +127,14 @@ function iconProps(size = "size-4") {
     strokeLinejoin: "round" as const,
     "aria-hidden": true,
   };
+}
+
+function ChartIcon() {
+  return (
+    <svg {...iconProps()}>
+      <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+    </svg>
+  );
 }
 
 function SettleIcon() {

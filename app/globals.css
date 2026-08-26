@@ -261,6 +261,32 @@ dialog::backdrop {
   .demo-scene-3 { animation-delay: 10s; }
 }
 
+/*
+  Skeleton placeholders.
+
+  A steady pulse rather than a sweeping gradient: the pulse animates opacity
+  only, which is composited, where a moving background gradient repaints on
+  every frame — the wrong trade on the low-end phones this most needs to help.
+
+  The base style is a plain block, so with reduced motion you get a still
+  placeholder rather than nothing.
+*/
+.skeleton {
+  background-color: var(--color-bg-tertiary);
+  border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes skeleton-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+
+  .skeleton {
+    animation: skeleton-pulse 1.6s ease-in-out infinite;
+  }
+}
+
 /* Money columns must align. As a @utility so variants work. */
 @utility tabular {
   font-variant-numeric: tabular-nums;
