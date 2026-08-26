@@ -1,234 +1,345 @@
+import { Fragment } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Logo } from "@/components/brand/logo";
+import { CURRENCIES } from "@/lib/currencies";
+import { Backdrop } from "@/components/landing/backdrop";
+import { AppPreview } from "@/components/landing/app-preview";
+import { DemoGroups } from "@/components/landing/demo-groups";
+import { HowItWorks } from "@/components/landing/how-it-works";
+import { SettlementGraph } from "@/components/landing/settlement-graph";
+import { SplitSwitcher } from "@/components/landing/split-switcher";
+
+import "./landing.css";
 
 export const metadata: Metadata = {
-  title: "Expense Splitter — split expenses, settle up, stay friends",
+  title: "Expense Splitter: split expenses, settle up, stay friends",
   description:
-    "Track what everyone paid, in any currency, and see exactly who owes whom.",
+    `Track what everyone paid, in any of ${CURRENCIES.length} currencies, and see exactly ` +
+    "who owes whom. Six debts become three payments. No account needed to look around.",
 };
 
 /**
- * The landing page: a short pitch and a looping demo of the actual product
- * loop — log an expense, see the balances, settle in the fewest payments.
+ * The landing page.
  *
- * Statically prerendered. No database call, no images, and no client
- * JavaScript on this route, which is what meets the brief's two-second
- * time-to-interactive target. The demo is markup and CSS, so there is nothing
- * to download and nothing shifts as it loads.
+ * Statically prerendered, and deliberately still a pure server route: there is
+ * not one client component on it, so it ships none of the application's
+ * JavaScript — only Next's own router runtime, which every route carries.
+ * Every animation here is CSS: the drifting backdrop, the scroll-linked
+ * reveals, the settlement graph, and the four-way split control that genuinely
+ * responds to clicks. That is what holds the two-second time-to-interactive
+ * target while the page still moves like a product with a budget behind it.
  *
- * The figures are the real seeded ones, so they match what a visitor sees the
- * moment they press "Try it as a guest". If the seed changes, these do too.
+ * Worth knowing before adding to this route: importing anything with a "use
+ * client" boundary — lucide-react included, via `CurrencySymbol` — pulls a
+ * chunk onto the page and gives that property away. `npm run build` then
+ * reading `clientModules` in `.next/server/app/page_client-reference-manifest.js`
+ * is how to check; it should list nothing outside `node_modules/next`.
+ *
+ * The figures come from the seeded sample data and reconcile against
+ * `lib/balances.ts`, so they match what a visitor sees the second they press
+ * "Try it as a guest". If the seed changes, these have to change with it.
+ *
+ * Motion rules, applied throughout: composited properties only, and every
+ * animation declared inside `prefers-reduced-motion: no-preference` with the
+ * resting state as the finished state. Details in `app/landing.css`.
  */
+
+const HEADLINE: { words: string[]; shine?: boolean }[] = [
+  { words: ["Split", "expenses."] },
+  { words: ["Settle", "up."], shine: true },
+  { words: ["Stay", "friends."] },
+];
+
+
 export default function LandingPage() {
+  let wordIndex = 0;
+
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <header className="mx-auto flex w-full max-w-4xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
-        <span className="flex items-center gap-2.5">
-          <Logo className="size-6 text-accent" />
-          <span className="font-bold tracking-tight">Expense Splitter</span>
-        </span>
-        <Link
-          href="/sign-in"
-          className="text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
-        >
-          Sign in
-        </Link>
-      </header>
+    <div className="lp flex min-h-full flex-1 flex-col">
+      <div className="lp-progress" />
+      <Backdrop />
 
-      <main className="mx-auto w-full max-w-4xl flex-1 px-5 pb-16 sm:px-8">
-        <section className="pt-10 text-center sm:pt-16">
-          <h1 className="animate-rise mx-auto max-w-2xl text-3xl font-extrabold leading-tight tracking-tight">
-            Split expenses. Settle up. Stay friends.
-          </h1>
-          <p className="animate-rise delay-1 mx-auto mt-4 max-w-lg text-base leading-relaxed text-text-secondary">
-            Log what you paid, in any currency. See exactly who owes whom — with
-            the working shown, so nobody has to take it on trust.
-          </p>
+      {/* ---------------------------------------------------------- Nav */}
+      {/* The shell stays sticky and full width so the island has something to
+          be centred in; it takes no pointer events, or the transparent gutter
+          either side of the island would swallow clicks on the page beneath. */}
+      <header className="lp-nav-shell pointer-events-none sticky top-0 z-50 px-4 pt-3 sm:pt-4">
+        <div className="lp-nav pointer-events-auto mx-auto flex w-full max-w-5xl items-center justify-between gap-4 py-2.5 pe-2.5 ps-5">
+          {/* The glass itself: rim light, and a specular band that drifts
+              across every twelve seconds. Sits behind the content on its own
+              layer, so nothing here can catch a click or a tab stop. */}
+          <span aria-hidden="true" className="lp-nav-glass" />
 
-          {/* Both prominent. Guest leads because almost nobody makes an account
-              to look at a demo, and the guest view is the whole product. */}
-          <div className="animate-rise delay-2 mt-8 flex flex-wrap justify-center gap-3">
+          <span className="flex items-center gap-2.5">
+            <Logo className="size-6 text-accent" />
+            <span className="font-bold tracking-tight">Expense Splitter</span>
+          </span>
+
+          <nav className="hidden items-center gap-7 text-sm text-text-secondary md:flex">
+            <a className="transition-colors hover:text-text-primary" href="#how">
+              How it works
+            </a>
+            <a className="transition-colors hover:text-text-primary" href="#settle">
+              Settling up
+            </a>
+            <a className="transition-colors hover:text-text-primary" href="#splitting">
+              Splitting
+            </a>
+          </nav>
+
+          <span className="flex items-center gap-2">
             <Link
-              href="/groups"
-              className="inline-flex h-11 items-center rounded-md bg-accent px-6 font-semibold text-white transition-colors hover:bg-accent-hover"
+              href="/sign-in"
+              className="hidden h-9 items-center rounded-full px-3 text-sm font-medium text-text-secondary transition-colors hover:text-text-primary sm:inline-flex"
             >
-              Try it as a guest
+              Sign in
             </Link>
             <Link
+              href="/groups"
+              className="lp-cta inline-flex h-9 items-center rounded-full bg-accent px-4 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
+            >
+              Open the demo
+            </Link>
+          </span>
+        </div>
+      </header>
+
+      <main className="flex-1">
+        {/* ------------------------------------------------------- Hero */}
+        <section className="mx-auto w-full max-w-6xl px-5 pb-4 pt-12 text-center sm:px-8 sm:pt-16">
+          <p
+            className="lp-in inline-flex items-center gap-2 rounded-full border border-border bg-surface/70 px-3 py-1 text-xs text-text-secondary"
+            style={{ "--i": 0 } as React.CSSProperties}
+          >
+            <span aria-hidden="true" className="lp-live size-1.5 rounded-full bg-owed" />
+            Live demo, already full of data. No account needed.
+          </p>
+
+          {/* Each word is its own inline-block so it can rise, tilt and unblur
+              on its own delay. The spaces are real text nodes BETWEEN the
+              spans — a trailing space inside an inline-block is trimmed, which
+              would run the words together. */}
+          <h1
+            className="lp-h1 mx-auto mt-7 max-w-3xl text-balance font-extrabold leading-[1.05] tracking-[-0.03em]"
+            style={{ fontSize: "var(--lp-display)" }}
+          >
+            {HEADLINE.map((line) => (
+              <span key={line.words.join(" ")} className="block">
+                {line.words.map((word, wordInLine) => {
+                  const i = wordIndex++;
+                  return (
+                    <Fragment key={word}>
+                      {wordInLine > 0 ? " " : null}
+                      <span
+                        className="lp-word"
+                        style={{ "--i": i } as React.CSSProperties}
+                      >
+                        {line.shine ? <span className="lp-shine">{word}</span> : word}
+                      </span>
+                    </Fragment>
+                  );
+                })}
+              </span>
+            ))}
+          </h1>
+
+          <p
+            className="lp-in mx-auto mt-6 max-w-xl text-base leading-relaxed text-text-secondary"
+            style={{ "--i": 7 } as React.CSSProperties}
+          >
+            Log what you paid, in whichever currency you actually paid it. See
+            exactly who owes whom, with the working shown, so nobody has to take
+            it on trust.
+          </p>
+
+          {/* Stacked and equal-width on a phone; side by side from sm up. The
+              halo wrapper has to carry the width too, or the primary button
+              collapses to its text. */}
+          <div
+            className="lp-in mt-9 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center"
+            style={{ "--i": 8 } as React.CSSProperties}
+          >
+            <span className="lp-halo w-full max-w-xs rounded-md sm:w-auto">
+              <Link
+                href="/groups"
+                className="lp-cta inline-flex h-12 w-full items-center justify-center rounded-md bg-accent px-7 font-semibold text-white transition-colors hover:bg-accent-hover"
+              >
+                Try it as a guest
+              </Link>
+            </span>
+            <Link
               href="/sign-up"
-              className="inline-flex h-11 items-center rounded-md border border-border bg-surface px-6 font-semibold transition-colors hover:bg-bg-tertiary"
+              className="lp-cta inline-flex h-12 w-full max-w-xs items-center justify-center rounded-md border border-border bg-surface px-7 font-semibold transition-colors hover:bg-bg-tertiary sm:w-auto"
             >
               Create an account
             </Link>
           </div>
-          <p className="animate-rise delay-3 mt-3 text-xs text-text-tertiary">
-            No sign-up needed to look around.
-          </p>
+
+          {/* The demo itself, in the hero rather than below it: it is the
+              strongest thing on the page, and it should not need a scroll. */}
+          <div
+            className="lp-in mx-auto mt-12 w-full max-w-5xl text-start sm:mt-14"
+            style={{ "--i": 10 } as React.CSSProperties}
+          >
+            <AppPreview />
+          </div>
+
         </section>
 
-        <Demo />
+        {/* --------------------------------------------------- How it works */}
+        <section
+          id="how"
+          className="mx-auto mt-[var(--lp-section-gap)] w-full max-w-6xl scroll-mt-24 px-5 sm:px-8"
+        >
+          <div className="lp-reveal mx-auto max-w-2xl text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">
+              How it works
+            </p>
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight">
+              Three steps, and the third is the point
+            </h2>
+            <p className="mt-3 text-base leading-relaxed text-text-secondary">
+              Tracking is the boring part. Getting your money back is the reason
+              you started.
+            </p>
+          </div>
 
-        <section className="animate-rise delay-2 mx-auto mt-14 max-w-lg text-center">
-          <p className="text-sm leading-relaxed text-text-secondary">
-            Five sample groups are already loaded — a trip across three
-            currencies, a flat share, a lunch club and more. Nothing to set up,
-            nothing to sign for.
-          </p>
-          <Link
-            href="/groups"
-            className="mt-6 inline-flex h-11 items-center rounded-md bg-accent px-6 font-semibold text-white transition-colors hover:bg-accent-hover"
-          >
-            Try it as a guest
-          </Link>
+          <div className="mt-10">
+            <HowItWorks />
+          </div>
+        </section>
+
+        {/* ------------------------------------------- Settlement graph */}
+        <section
+          id="settle"
+          className="mx-auto mt-[var(--lp-section-gap)] w-full max-w-6xl scroll-mt-24 px-5 sm:px-8"
+        >
+          <div className="lp-reveal grid items-center gap-10 rounded-xl border border-border bg-surface/70 p-6 sm:p-10 lg:grid-cols-[1fr_1.15fr] lg:gap-14">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">
+                Debt simplification
+              </p>
+              <h2 className="mt-3 text-2xl font-extrabold tracking-tight">
+                Six debts. Three payments. Same result.
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-text-secondary">
+                The four people above, six expenses between them, and debt
+                running in six different directions. A greedy simplifier
+                repeatedly matches the largest debtor with the largest creditor
+                until nobody is left, which clears the whole group in three
+                transfers.
+              </p>
+              <p className="mt-4 text-sm leading-relaxed text-text-secondary">
+                It does route money between people who never shared a bill,
+                which is the loudest complaint anyone has about doing it this
+                way. So the app keeps both views, and the direct debts, pair by
+                pair, sit one tap behind the clever ones.
+              </p>
+              <Link
+                href="/groups"
+                className="lp-cta mt-7 inline-flex h-11 items-center rounded-md border border-border bg-bg-primary px-5 text-sm font-semibold transition-colors hover:bg-bg-tertiary"
+              >
+                See it on real numbers
+              </Link>
+            </div>
+
+            <SettlementGraph />
+          </div>
+        </section>
+
+        {/* ------------------------------------------------ Split switcher */}
+        <section
+          id="splitting"
+          className="mx-auto mt-[var(--lp-section-gap)] w-full max-w-6xl scroll-mt-24 px-5 sm:px-8"
+        >
+          <div className="lp-reveal grid items-center gap-10 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">
+                Splitting
+              </p>
+              <h2 className="mt-3 text-2xl font-extrabold tracking-tight">
+                Bills are rarely four equal quarters
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-text-secondary">
+                Someone took the bigger room. Someone skipped the wine. Four
+                split types cover it, the remainder always lands somewhere you
+                can see, and the total has to match the expense before it will
+                save.
+              </p>
+              <p className="mt-4 text-sm leading-relaxed text-text-secondary">
+                Try it. This is a real control, and every mode below adds up to
+                exactly JOD 480.000.
+              </p>
+            </div>
+
+            <SplitSwitcher />
+          </div>
+        </section>
+
+        {/* ---------------------------------------------------- Final CTA */}
+        <section className="mx-auto mt-[var(--lp-section-gap)] w-full max-w-6xl px-5 pb-24 sm:px-8">
+          <div className="lp-reveal relative overflow-hidden rounded-xl border border-border bg-surface/70 px-5 py-14 sm:px-10">
+            <span aria-hidden="true" className="lp-orb lp-orb-cta" />
+
+            <div className="relative mx-auto max-w-2xl text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">
+                The demo
+              </p>
+              <h2 className="mt-3 text-2xl font-extrabold tracking-tight">
+                Pick a group. The numbers are already in it.
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-text-secondary">
+                20 people, 43 expenses and six recorded settlements are waiting
+                across these five. Look around as a guest, and make an account
+                later or not at all.
+              </p>
+            </div>
+
+            <div className="relative mt-10">
+              <DemoGroups />
+            </div>
+
+            <div className="relative mt-10 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
+              <span className="lp-halo w-full max-w-xs rounded-md sm:w-auto">
+                <Link
+                  href="/groups"
+                  className="lp-cta inline-flex h-12 w-full items-center justify-center rounded-md bg-accent px-7 font-semibold text-white transition-colors hover:bg-accent-hover"
+                >
+                  Try it as a guest
+                </Link>
+              </span>
+              <Link
+                href="/sign-up"
+                className="lp-cta inline-flex h-12 w-full max-w-xs items-center justify-center rounded-md border border-border bg-bg-primary px-7 font-semibold transition-colors hover:bg-bg-tertiary sm:w-auto"
+              >
+                Create an account
+              </Link>
+            </div>
+          </div>
         </section>
       </main>
 
-      <footer className="mx-auto w-full max-w-4xl border-t border-border px-5 py-6 text-xs text-text-tertiary sm:px-8">
-        Split expenses. Settle up. Stay friends.
+      <footer className="border-t border-border">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-xs text-text-tertiary sm:px-8">
+          <span className="flex items-center gap-2.5">
+            <Logo className="size-4 text-accent" />
+            <span>Split expenses. Settle up. Stay friends.</span>
+          </span>
+          <span className="flex items-center gap-5">
+            <Link className="transition-colors hover:text-text-primary" href="/groups">
+              Demo
+            </Link>
+            <Link className="transition-colors hover:text-text-primary" href="/sign-in">
+              Sign in
+            </Link>
+            <Link className="transition-colors hover:text-text-primary" href="/sign-up">
+              Create an account
+            </Link>
+          </span>
+        </div>
       </footer>
     </div>
-  );
-}
-
-/**
- * Three scenes on one 15-second loop, stacked in a single grid cell and
- * cross-faded by CSS. Decorative — the copy above already says what the
- * product does, so a screen reader gets that rather than a wall of figures.
- */
-function Demo() {
-  return (
-    <section aria-hidden="true" className="animate-rise delay-4 mt-14">
-      <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
-        <div className="flex items-center justify-between gap-4 border-b border-border bg-bg-tertiary/40 px-5 py-3.5">
-          <span className="flex items-center gap-2 text-sm font-semibold">
-            <Logo className="size-4 text-accent" />
-            Trip to Japan
-          </span>
-          <span className="text-xs text-text-secondary">4 members · USD</span>
-        </div>
-
-        <div className="grid min-h-[19rem] p-5 sm:min-h-[17rem]">
-          <Scene index={1} step="1" title="Log what you paid">
-            <ul className="flex flex-col gap-2.5">
-              <Row title="Izakaya dinner" meta="Alex paid · shares 2:2:1:1" amount="¥42,600" />
-              <Row title="Kyoto ryokan" meta="Taylor paid · exact amounts" amount="¥120,000" />
-              <Row title="JR Pass (7-day)" meta="Alex paid · split equally" amount="$236.50" />
-            </ul>
-            <p className="mt-4 text-xs text-text-secondary">
-              Any currency. The rate is stored at the moment you paid, so old
-              balances never move.
-            </p>
-          </Scene>
-
-          <Scene index={2} step="2" title="See who owes what">
-            <ul className="flex flex-col gap-2.5">
-              <Balance name="Alex Chen" amount="+$216.46" tone="owed" />
-              <Balance name="Taylor Kim" amount="+$318.12" tone="owed" />
-              <Balance name="Jordan Park" amount="−$219.49" tone="owe" />
-              <Balance name="Sam Rivera" amount="−$315.09" tone="owe" />
-            </ul>
-            <p className="mt-4 text-xs text-text-secondary">
-              Every figure traces back to the expenses behind it. Open one and
-              see the working.
-            </p>
-          </Scene>
-
-          <Scene index={3} step="3" title="Settle in the fewest payments">
-            <div className="flex items-center gap-3">
-              <span className="rounded-full bg-bg-tertiary px-2.5 py-1 text-xs text-text-tertiary line-through">
-                6 payments
-              </span>
-              <span aria-hidden="true" className="text-text-tertiary">→</span>
-              <span className="rounded-full bg-accent-subtle px-2.5 py-1 text-xs font-medium text-text-primary">
-                3 payments
-              </span>
-            </div>
-            <ul className="mt-3.5 flex flex-col gap-2.5">
-              <Payment from="Jordan" to="Alex" amount="$216.46" />
-              <Payment from="Sam" to="Taylor" amount="$315.09" />
-              <Payment from="Jordan" to="Taylor" amount="$3.03" />
-            </ul>
-            <p className="mt-4 text-xs text-text-secondary">
-              Fewer transfers, same result — and the original debts stay one tap
-              away.
-            </p>
-          </Scene>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Scene({
-  index,
-  step,
-  title,
-  children,
-}: {
-  index: 1 | 2 | 3;
-  step: string;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className={`demo-scene demo-scene-${index}`}>
-      <p className="flex items-center gap-2 text-xs font-medium text-text-secondary">
-        <span className="grid size-5 place-items-center rounded-full bg-accent text-[0.625rem] font-semibold text-white">
-          {step}
-        </span>
-        {title}
-      </p>
-      <div className="mt-3.5">{children}</div>
-    </div>
-  );
-}
-
-function Row({ title, meta, amount }: { title: string; meta: string; amount: string }) {
-  return (
-    <li className="flex items-center justify-between gap-4 rounded-md border border-border bg-bg-primary px-3.5 py-2.5">
-      <span className="min-w-0">
-        <span className="block truncate text-sm">{title}</span>
-        <span className="block truncate text-[0.625rem] text-text-secondary">{meta}</span>
-      </span>
-      <span className="tabular shrink-0 font-mono text-sm font-medium">{amount}</span>
-    </li>
-  );
-}
-
-function Balance({
-  name,
-  amount,
-  tone,
-}: {
-  name: string;
-  amount: string;
-  tone: "owed" | "owe";
-}) {
-  return (
-    <li className="flex items-center justify-between gap-4">
-      <span className="truncate text-sm">{name}</span>
-      <span
-        className={`tabular shrink-0 font-mono text-sm font-medium ${
-          tone === "owed" ? "text-owed" : "text-owe"
-        }`}
-      >
-        {amount}
-      </span>
-    </li>
-  );
-}
-
-function Payment({ from, to, amount }: { from: string; to: string; amount: string }) {
-  return (
-    <li className="flex items-center justify-between gap-4 rounded-md border border-border bg-bg-primary px-3.5 py-2.5">
-      <span className="truncate text-sm">
-        <span className="font-medium">{from}</span>
-        <span className="text-text-secondary"> pays </span>
-        <span className="font-medium">{to}</span>
-      </span>
-      <span className="tabular shrink-0 font-mono text-sm font-medium">{amount}</span>
-    </li>
   );
 }
