@@ -2,7 +2,7 @@ import "server-only";
 
 import { getActor } from "@/lib/supabase/actor";
 import { createGuestClient, createRouteClient } from "@/lib/supabase/server";
-import { pairwiseDebts, simplifyDebts } from "@/lib/balances";
+import { isSettled, pairwiseDebts, simplifyDebts } from "@/lib/balances";
 import { formatFullDate, formatRelativeTime } from "@/lib/format";
 import type { AvatarColor } from "@/lib/avatar-colors";
 import type { ActivityRow, GroupDetail, GroupMember, GroupSummary } from "@/lib/types";
@@ -85,6 +85,9 @@ export async function listGroups(): Promise<GroupSummary[]> {
       expenseCount: Number(total?.expense_count ?? 0),
       totalMinor: Number(total?.total_minor ?? 0),
       yourBalanceMinor: mapped.find((m) => m.isViewer)?.balanceMinor ?? 0,
+      yourBalanceSettled: isSettled(
+        mapped.find((m) => m.isViewer)?.balanceMinor ?? 0,
+      ),
     };
   });
 }
@@ -232,6 +235,9 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
     .filter((s) => groupExpenseIds.has(s.expense_id as string))
     .reduce((sum, s) => sum + Number(s.converted_amount_minor), 0);
 
+  const plan = simplifyDebts(members);
+  const directPlan = pairwiseDebts(members, activity);
+
   return {
     id: group.id as string,
     name: group.name as string,
@@ -242,12 +248,21 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
     expenseCount: Number(totals?.expense_count ?? 0),
     totalMinor: Number(totals?.total_minor ?? 0),
     yourBalanceMinor: members.find((m) => m.isViewer)?.balanceMinor ?? 0,
+    yourBalanceSettled: isSettled(
+      members.find((m) => m.isViewer)?.balanceMinor ?? 0,
+    ),
     activity,
     viewerPaidMinor,
     viewerShareMinor,
     categories: [...new Set((allCategories ?? []).map((c) => c.name as string))].sort(),
-    plan: simplifyDebts(members),
-    directPlan: pairwiseDebts(members, activity),
+    viewerName: members.find((m) => m.isViewer)?.name ?? null,
+    viewerSettled: isSettled(members.find((m) => m.isViewer)?.balanceMinor ?? 0),
+    plan,
+    directPlan,
+    planCounts: {
+      direct: (directPlan.yours ? 1 : 0) + directPlan.others.length,
+      simplified: (plan.yours ? 1 : 0) + plan.others.length,
+    },
   };
 }
 
@@ -263,5 +278,6 @@ function toMember(
     color: row.avatar_color as AvatarColor,
     balanceMinor: balanceOf.get(row.id) ?? 0,
     isViewer: row.id === viewerId,
+    settled: isSettled(balanceOf.get(row.id) ?? 0),
   };
 }

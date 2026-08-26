@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { ActivityList } from "./activity-list";
 import { Button } from "@/components/ui/button";
@@ -8,51 +9,46 @@ import { CategoryBreakdown } from "@/components/expenses/category-breakdown";
 import { ExpenseFilters } from "@/components/expenses/expense-filters";
 import {
   NO_FILTERS,
-  applyFilters,
   countActiveFilters,
   hasActiveFilters,
+  toSearchParams,
+  type CategoryTotal,
   type Filters,
 } from "@/lib/filters";
 import type { EditableExpense } from "@/components/expenses/expense-composer";
-import type { GroupDetail } from "@/lib/types";
+import type { ActivityRow, GroupDetail } from "@/lib/types";
 
 /**
  * The activity column: filters, breakdown, and the timeline itself.
  *
- * Filtering happens here rather than on the server because the group's whole
- * timeline is already loaded — a round-trip per keystroke would be slower and
- * would buy nothing.
+ * Presentation only. The rows arrive already filtered and the totals already
+ * aggregated; changing a filter writes it to the URL and the server re-renders.
+ * That keeps the arithmetic in one place and makes a filtered view shareable.
  */
 export function Ledger({
   group,
+  rows,
+  totals,
+  filters,
+  usedCategories,
   editingId,
   onEdit,
 }: {
   group: GroupDetail;
+  rows: ActivityRow[];
+  totals: CategoryTotal[];
+  filters: Filters;
+  usedCategories: string[];
   editingId: string | null;
   onEdit: (expense: EditableExpense) => void;
 }) {
-  const [filters, setFilters] = useState<Filters>(NO_FILTERS);
-  const [showFilters, setShowFilters] = useState(false);
+  const router = useRouter();
+  const [showFilters, setShowFilters] = useState(() => hasActiveFilters(filters));
 
-  const rows = useMemo(
-    () => applyFilters(group.activity, filters),
-    [group.activity, filters],
-  );
-
-  // Only categories this group actually uses — offering all nine when three
-  // are in play is a longer list that answers fewer questions.
-  const categories = useMemo(
-    () =>
-      [
-        ...new Set(
-          group.activity
-            .filter((r) => r.kind === "expense")
-            .map((r) => r.category),
-        ),
-      ].sort(),
-    [group.activity],
-  );
+  function setFilters(next: Filters) {
+    const query = toSearchParams(next);
+    router.replace(`/groups/${group.id}${query ? `?${query}` : ""}`, { scroll: false });
+  }
 
   const active = countActiveFilters(filters);
   const expenses = rows.filter((r) => r.kind === "expense").length;
@@ -91,14 +87,14 @@ export function Ledger({
             filters={filters}
             onChange={setFilters}
             members={group.members}
-            categories={categories}
+            categories={usedCategories}
           />
         </div>
       ) : null}
 
       {rows.length > 0 ? (
         <div className="mt-3">
-          <CategoryBreakdown rows={rows} currency={group.currency} />
+          <CategoryBreakdown totals={totals} currency={group.currency} />
         </div>
       ) : null}
 

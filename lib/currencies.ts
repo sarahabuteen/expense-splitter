@@ -80,3 +80,30 @@ export function localeFor(code: string): string {
 }
 
 export const SUPPORTED_CURRENCIES = CURRENCIES.map((c) => c.code);
+
+/**
+ * Search and rank currencies. Called only from the API route, so the ordering
+ * is decided server-side like every other sort in the app.
+ *
+ * Matches code, name or symbol; exact then prefix code matches rank first, so
+ * "jod" puts JOD above every other dinar.
+ */
+export function searchCurrencies(query: string): Currency[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return CURRENCIES;
+
+  const rank = (currency: Currency): number => {
+    const code = currency.code.toLowerCase();
+    if (code === q) return 0;
+    if (code.startsWith(q)) return 1;
+    if (currency.name.toLowerCase().startsWith(q)) return 2;
+    return 3;
+  };
+
+  return CURRENCIES.filter(
+    (c) =>
+      c.code.toLowerCase().includes(q) ||
+      c.name.toLowerCase().includes(q) ||
+      c.symbol.toLowerCase().includes(q),
+  ).sort((a, b) => rank(a) - rank(b));
+}

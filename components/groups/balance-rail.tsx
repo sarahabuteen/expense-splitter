@@ -6,12 +6,11 @@ import { RecordSettlementDialog } from "@/components/settle/record-settlement-di
 import { Avatar } from "@/components/ui/avatar";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { formatMoney, formatSignedMoney } from "@/lib/format";
-import { isSettled } from "@/lib/balances";
 import type { GroupDetail, PlannedPayment } from "@/lib/types";
 
 /** The detail pane: where you stand, what to pay, and everyone's position. */
 export function BalanceRail({ group }: { group: GroupDetail }) {
-  const settled = isSettled(group.yourBalanceMinor);
+  const settled = group.viewerSettled;
   const owed = group.yourBalanceMinor > 0;
   // Both already resolved server-side by simplifyDebts, keyed on member ids.
   const { yours, others } = group.plan;
@@ -158,7 +157,7 @@ export function BalanceRail({ group }: { group: GroupDetail }) {
         <h2 className="text-sm font-semibold text-text-primary">Member balances</h2>
         <ul className="mt-4 flex flex-col gap-3">
           {group.members.map((m) => {
-            const memberSettled = isSettled(m.balanceMinor);
+            const memberSettled = m.settled;
             return (
               <li key={m.id} className="flex items-center gap-2.5">
                 <Avatar name={m.name} color={m.color} size="sm" />
@@ -205,7 +204,7 @@ export function BalanceRail({ group }: { group: GroupDetail }) {
         payment={recording}
         groupId={group.id}
         currency={group.currency}
-        viewerName={group.members.find((m) => m.isViewer)?.name}
+        viewerName={group.viewerName ?? undefined}
         onClose={() => setRecording(null)}
       />
     </div>

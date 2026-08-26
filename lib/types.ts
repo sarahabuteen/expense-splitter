@@ -9,6 +9,9 @@ export type GroupMember = {
   balanceMinor: number;
   /** True for the member representing the person viewing the page. */
   isViewer: boolean;
+  /** Whether their balance is within the settled threshold. Decided once,
+      server-side, so no component reimplements the comparison. */
+  settled: boolean;
 };
 
 export type GroupSummary = {
@@ -21,6 +24,8 @@ export type GroupSummary = {
   expenseCount: number;
   totalMinor: number;
   yourBalanceMinor: number;
+  /** Whether the viewer is settled in this group. Decided server-side. */
+  yourBalanceSettled: boolean;
 };
 
 export type ActivityRow =
@@ -90,6 +95,11 @@ export type SettlementPlan = {
 };
 
 export type GroupDetail = GroupSummary & {
+  /** The viewing member's name, resolved server-side. */
+  viewerName: string | null;
+  /** Whether the viewer personally is settled. */
+  viewerSettled: boolean;
+  planCounts: { direct: number; simplified: number };
   activity: ActivityRow[];
   /** The nine predefined plus any this group has added. */
   categories: string[];

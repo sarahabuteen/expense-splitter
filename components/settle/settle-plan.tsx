@@ -31,10 +31,9 @@ export function SettlePlan({ group }: { group: GroupDetail }) {
 
   const plan = simplified ? group.plan : group.directPlan;
   const payments = [...(plan.yours ? [plan.yours] : []), ...plan.others];
-  const directCount =
-    (group.directPlan.yours ? 1 : 0) + group.directPlan.others.length;
-  const simpleCount = (group.plan.yours ? 1 : 0) + group.plan.others.length;
-  const viewerName = group.members.find((m) => m.isViewer)?.name;
+  // Counted server-side alongside the plans themselves.
+  const { direct: directCount, simplified: simpleCount } = group.planCounts;
+  const viewerName = group.viewerName ?? undefined;
 
   // Settled is about NET balances, not about whether historical pairwise debts
   // still exist: a group whose debts cancel in a circle owes nobody anything.

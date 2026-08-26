@@ -10,7 +10,10 @@ function member(
   balanceMinor: number,
   isViewer = false,
 ): GroupMember {
-  return { id, name, email: null, color: "indigo", balanceMinor, isViewer };
+  return {
+    id, name, email: null, color: "indigo", balanceMinor, isViewer,
+    settled: Math.abs(balanceMinor) <= 1,
+  };
 }
 
 test("settled threshold treats a rounding residue as zero", () => {

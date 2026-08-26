@@ -4,7 +4,8 @@ import { useRef, useState } from "react";
 
 import { ExpenseComposer, type EditableExpense } from "@/components/expenses/expense-composer";
 import { Ledger } from "./ledger";
-import type { GroupDetail } from "@/lib/types";
+import type { CategoryTotal, Filters } from "@/lib/filters";
+import type { ActivityRow, GroupDetail } from "@/lib/types";
 
 /**
  * Holds the one piece of state the composer and the ledger share: which
@@ -13,7 +14,21 @@ import type { GroupDetail } from "@/lib/types";
  * Editing reuses the composer rather than opening a second form — the two would
  * drift, and you would learn the layout twice.
  */
-export function GroupWorkspace({ group }: { group: GroupDetail }) {
+export function GroupWorkspace({
+  group,
+  rows,
+  totals,
+  filters,
+  usedCategories,
+}: {
+  group: GroupDetail;
+  /** Already filtered on the server. */
+  rows: ActivityRow[];
+  /** Already aggregated on the server. */
+  totals: CategoryTotal[];
+  filters: Filters;
+  usedCategories: string[];
+}) {
   const [editing, setEditing] = useState<EditableExpense | null>(null);
   const composerRef = useRef<HTMLDivElement>(null);
 
@@ -40,7 +55,15 @@ export function GroupWorkspace({ group }: { group: GroupDetail }) {
         />
       </div>
 
-      <Ledger group={group} editingId={editing?.id ?? null} onEdit={edit} />
+      <Ledger
+        group={group}
+        rows={rows}
+        totals={totals}
+        filters={filters}
+        usedCategories={usedCategories}
+        editingId={editing?.id ?? null}
+        onEdit={edit}
+      />
     </div>
   );
 }

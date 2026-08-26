@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
-import { CURRENCIES, currencyFor, type Currency } from "@/lib/currencies";
+import { currencyFor, type Currency } from "@/lib/currencies";
 import { CurrencySymbol } from "./currency-symbol";
 
 /**
@@ -46,7 +46,35 @@ export function CurrencyCombobox({
   const [anchor, setAnchor] = useState<Anchor | null>(null);
 
   const selected = currencyFor(code);
-  const matches = useMemo(() => filter(query), [query]);
+  const [matches, setMatches] = useState<Currency[]>([]);
+
+  /**
+   * Results come from /api/currencies, so the matching and ranking are decided
+   * server-side. Debounced and abortable: a keystroke should not queue a
+   * request, and a slow earlier response must not overwrite a newer one.
+   */
+  useEffect(() => {
+    if (!open) return;
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `/api/currencies?q=${encodeURIComponent(query)}`,
+          { signal: controller.signal },
+        );
+        const body = await response.json();
+        setMatches(body.currencies ?? []);
+      } catch {
+        // An aborted or failed request leaves the previous results in place,
+        // which is better than emptying the list under the user.
+      }
+    }, query ? 120 : 0);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [open, query]);
 
   /**
    * The list is positioned FIXED against measured coordinates, not absolutely
@@ -194,7 +222,7 @@ export function CurrencyCombobox({
         >
           {matches.length === 0 ? (
             <li className="px-3 py-2 text-sm text-text-secondary">
-              No currency matches &ldquo;{query}&rdquo;.
+              {query ? `No currency matches "${query}".` : "Loading currencies…"}
             </li>
           ) : (
             matches.map((currency, index) => (
@@ -267,27 +295,6 @@ function label(currency: Currency): string {
   // falling back to the superseded glyph.
   if (currency.code === "SAR") return `${currency.code} — ${currency.name}`;
   return `${currency.symbol}  ${currency.code} — ${currency.name}`;
-}
-
-/** Matches code, name or symbol; exact and prefix code matches rank first. */
-function filter(query: string): Currency[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return CURRENCIES;
-
-  return CURRENCIES.filter(
-    (c) =>
-      c.code.toLowerCase().includes(q) ||
-      c.name.toLowerCase().includes(q) ||
-      c.symbol.toLowerCase().includes(q),
-  ).sort((a, b) => rank(a, q) - rank(b, q));
-}
-
-function rank(currency: Currency, q: string): number {
-  const code = currency.code.toLowerCase();
-  if (code === q) return 0;
-  if (code.startsWith(q)) return 1;
-  if (currency.name.toLowerCase().startsWith(q)) return 2;
-  return 3;
 }
 
 function ChevronIcon({ open }: { open: boolean }) {

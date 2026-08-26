@@ -6,6 +6,7 @@ import { GroupWorkspace } from "@/components/groups/group-workspace";
 import { AvatarStack } from "@/components/ui/avatar";
 import { BalanceRail } from "@/components/groups/balance-rail";
 import { formatMoney } from "@/lib/format";
+import { applyFilters, categoryTotals, parseFilters } from "@/lib/filters";
 import { getGroup } from "@/lib/server/groups";
 
 export async function generateMetadata({
@@ -18,10 +19,24 @@ export async function generateMetadata({
   };
 }
 
-export default async function GroupPage({ params }: PageProps<"/groups/[groupId]">) {
+export default async function GroupPage({
+  params,
+  searchParams,
+}: PageProps<"/groups/[groupId]">) {
   const { groupId } = await params;
   const group = await getGroup(groupId);
   if (!group) notFound();
+
+  // Filtering and aggregation run HERE, on the server. The client is handed
+  // finished rows and totals; it does not compute either.
+  const filters = parseFilters(await searchParams);
+  const rows = applyFilters(group.activity, filters);
+  const totals = categoryTotals(rows);
+  const usedCategories = [
+    ...new Set(
+      group.activity.filter((r) => r.kind === "expense").map((r) => r.category),
+    ),
+  ].sort();
 
   // No max-width and no mx-auto: the sidebar already narrows the pane, so any
   // further cap just reintroduces dead space. The activity column flexes and
@@ -83,7 +98,13 @@ export default async function GroupPage({ params }: PageProps<"/groups/[groupId]
       <hr className="mt-6 border-border" />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_var(--container-detail)]">
-        <GroupWorkspace group={group} />
+        <GroupWorkspace
+          group={group}
+          rows={rows}
+          totals={totals}
+          filters={filters}
+          usedCategories={usedCategories}
+        />
 
         <aside className="lg:sticky lg:top-6 lg:self-start">
           <BalanceRail group={group} />

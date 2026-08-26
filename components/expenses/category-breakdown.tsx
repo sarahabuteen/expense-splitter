@@ -4,9 +4,8 @@ import { useState } from "react";
 
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { categoryStyle } from "@/lib/categories";
-import { categoryTotals } from "@/lib/filters";
 import { formatMoney } from "@/lib/format";
-import type { ActivityRow } from "@/lib/types";
+import type { CategoryTotal } from "@/lib/filters";
 
 /**
  * Spending by category — totals and percentages, per Core #8.
@@ -17,14 +16,14 @@ import type { ActivityRow } from "@/lib/types";
  * away for anyone who wants them.
  */
 export function CategoryBreakdown({
-  rows,
+  totals,
   currency,
 }: {
-  rows: ActivityRow[];
+  /** Aggregated on the server — this component only draws it. */
+  totals: CategoryTotal[];
   currency: string;
 }) {
   const [open, setOpen] = useState(false);
-  const totals = categoryTotals(rows);
 
   if (totals.length === 0) return null;
 

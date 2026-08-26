@@ -9,8 +9,6 @@ import { useNewGroup } from "@/components/groups/new-group-dialog";
 import { formatMoney, formatSignedMoney } from "@/lib/format";
 import type { GroupSummary } from "@/lib/types";
 
-const SETTLED_THRESHOLD_MINOR = 1;
-
 /**
  * Primary navigation: the group list, per the UI patterns.
  *
@@ -63,8 +61,7 @@ export function Sidebar({ groups }: { groups: GroupSummary[] }) {
         <ul className="flex flex-col gap-0.5">
           {groups.map((group) => {
             const active = pathname.startsWith(`/groups/${group.id}`);
-            const settled =
-              Math.abs(group.yourBalanceMinor) <= SETTLED_THRESHOLD_MINOR;
+            const settled = group.yourBalanceSettled;
 
             return (
               <li key={group.id}>

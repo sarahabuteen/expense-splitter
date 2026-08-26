@@ -11,7 +11,6 @@ import { TrashIcon } from "@/components/ui/trash-icon";
 import { AddMemberRow } from "./add-member-row";
 import { CurrencyCombobox } from "@/components/ui/currency-combobox";
 import { formatMoney, formatSignedMoney } from "@/lib/format";
-import { isSettled } from "@/lib/balances";
 import type { GroupSummary } from "@/lib/types";
 
 /** UI ONLY — nothing here submits. */
@@ -21,7 +20,7 @@ export function GroupSettings({ group }: { group: GroupSummary }) {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  const unsettled = group.members.filter((m) => !isSettled(m.balanceMinor));
+  const unsettled = group.members.filter((m) => !m.settled);
   const hasExpenses = group.expenseCount > 0;
 
   /**
@@ -155,7 +154,7 @@ export function GroupSettings({ group }: { group: GroupSummary }) {
       >
         <ul className="overflow-hidden rounded-md border border-border">
           {group.members.map((m) => {
-            const settled = isSettled(m.balanceMinor);
+            const settled = m.settled;
             return (
               <li
                 key={m.id}

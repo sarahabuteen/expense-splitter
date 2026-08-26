@@ -118,3 +118,40 @@ export function categoryTotals(rows: ActivityRow[]): CategoryTotal[] {
     }))
     .sort((a, b) => b.totalMinor - a.totalMinor);
 }
+
+/**
+ * Filters live in the URL, so they are parsed and applied on the server.
+ *
+ * That also makes a filtered view shareable and survivable across a reload,
+ * which client-only state is not.
+ */
+export function parseFilters(params: Record<string, string | string[] | undefined>): Filters {
+  const one = (key: string): string | null => {
+    const value = params[key];
+    const raw = Array.isArray(value) ? value[0] : value;
+    return raw && raw.trim() !== "" ? raw : null;
+  };
+
+  const categories = params.category;
+  return {
+    query: one("q") ?? "",
+    categories: Array.isArray(categories)
+      ? categories
+      : categories
+        ? [categories]
+        : [],
+    memberId: one("member"),
+    from: one("from"),
+    to: one("to"),
+  };
+}
+
+export function toSearchParams(filters: Filters): string {
+  const params = new URLSearchParams();
+  if (filters.query.trim()) params.set("q", filters.query.trim());
+  for (const category of filters.categories) params.append("category", category);
+  if (filters.memberId) params.set("member", filters.memberId);
+  if (filters.from) params.set("from", filters.from);
+  if (filters.to) params.set("to", filters.to);
+  return params.toString();
+}
