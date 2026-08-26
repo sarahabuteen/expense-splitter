@@ -3,14 +3,17 @@ export const THEMES = ["system", "light", "dark"] as const;
 export type Theme = (typeof THEMES)[number];
 
 /**
- * Three states, not two. "System" must be a real, selectable option rather than
- * merely the initial default — otherwise choosing light once permanently opts
- * you out of following the OS.
+ * Dark is the default: the palette the product is designed around, and what a
+ * visitor sees before choosing anything. "System" stays a real, selectable
+ * option rather than the initial state, so following the OS is a deliberate
+ * choice instead of something you get by accident.
  */
+export const DEFAULT_THEME: Theme = "dark";
+
 export function readTheme(): Theme {
-  if (typeof localStorage === "undefined") return "system";
+  if (typeof localStorage === "undefined") return DEFAULT_THEME;
   const stored = localStorage.getItem(THEME_KEY);
-  return THEMES.includes(stored as Theme) ? (stored as Theme) : "system";
+  return THEMES.includes(stored as Theme) ? (stored as Theme) : DEFAULT_THEME;
 }
 
 export function applyTheme(theme: Theme) {
@@ -39,7 +42,11 @@ export function subscribeToTheme(callback: () => void) {
 }
 
 /**
- * Runs before paint, inlined in <head>, to stop a flash of the wrong theme —
+ * Runs before paint, inlined in <head>, to stop a flash of the wrong theme,
  * which the spec lists as an explicit requirement.
+ *
+ * The server already renders `data-theme="dark"`, so an unset preference needs
+ * no work here. Only a stored "light" or "system" has to correct the markup,
+ * and "system" does it by removing the attribute so the OS rule takes over.
  */
-export const NO_FLASH_SCRIPT = `(function(){try{var t=localStorage.getItem("${THEME_KEY}");if(t==="dark"||t==="light"){document.documentElement.setAttribute("data-theme",t)}}catch(e){}})()`;
+export const NO_FLASH_SCRIPT = `(function(){try{var t=localStorage.getItem("${THEME_KEY}");if(t==="light"||t==="dark"){document.documentElement.setAttribute("data-theme",t)}else if(t==="system"){document.documentElement.removeAttribute("data-theme")}}catch(e){}})()`;

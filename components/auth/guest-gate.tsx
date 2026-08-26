@@ -84,7 +84,7 @@ export function GuestGateProvider({
             <Perk>Balances that keep counting after you close the tab</Perk>
           </ul>
           <p className="mt-4 text-xs text-text-tertiary">
-            These sample groups stay here either way — nothing you&rsquo;ve looked
+            These sample groups stay here either way, so nothing you&rsquo;ve looked
             at is lost.
           </p>
         </div>

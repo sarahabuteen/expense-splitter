@@ -163,8 +163,8 @@ function NewGroupDialog({
             describedBy="ng-members-hint"
           />
           <p id="ng-members-hint" className="text-xs text-text-secondary">
-            Names are enough — nobody needs an account. Emails, if anyone has
-            one, can be added in group settings.
+            Names are enough. Nobody needs an account, and emails can be added
+            later in group settings.
           </p>
         </div>
 

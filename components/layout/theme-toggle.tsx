@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 
 import {
+  DEFAULT_THEME,
   readTheme,
   subscribeToTheme,
   writeTheme,
@@ -15,7 +16,7 @@ import {
  * Next 16 errors on setState-in-effect, and this is what that pattern is for.
  */
 export function ThemeToggle() {
-  const theme = useSyncExternalStore(subscribeToTheme, readTheme, () => "system" as Theme);
+  const theme = useSyncExternalStore(subscribeToTheme, readTheme, () => DEFAULT_THEME);
 
   return (
     <div

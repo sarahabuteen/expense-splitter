@@ -147,7 +147,7 @@ export function GroupSettings({ group }: { group: GroupSummary }) {
             */}
             {hasExpenses ? (
               <p id="g-currency-locked" className="text-xs text-text-secondary">
-                Locked because this group already has expenses — every balance was
+                Locked because this group already has expenses. Every balance was
                 calculated against {group.currency}.
               </p>
             ) : null}
@@ -173,7 +173,7 @@ export function GroupSettings({ group }: { group: GroupSummary }) {
 
       <Section
         title="Members"
-        description="Someone can only be removed once they're settled and have no expense history — removing them otherwise would rewrite what the group spent."
+        description="Someone can only be removed once they're settled and have no expense history. Removing them otherwise would rewrite what the group spent."
       >
         <ul className="overflow-hidden rounded-md border border-border">
           {group.members.map((m) => {
@@ -249,7 +249,7 @@ export function GroupSettings({ group }: { group: GroupSummary }) {
       <Section title="Delete group" tone="danger">
         {unsettled.length > 0 ? (
           <p className="text-sm text-text-secondary">
-            This group can&rsquo;t be deleted yet —{" "}
+            This group can&rsquo;t be deleted yet, because{" "}
             <span className="font-medium text-text-primary">
               {unsettled.length} member{unsettled.length === 1 ? " has" : "s have"}
             </span>{" "}

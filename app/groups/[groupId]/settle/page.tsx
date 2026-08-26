@@ -46,7 +46,7 @@ export default async function SettlePage({
 
       <h1 className="mt-4 text-2xl font-extrabold tracking-tight">Settle up</h1>
       <p className="mt-1.5 text-sm text-text-secondary">
-        Every figure comes from the expenses in {group.name} — open any of them
+        Every figure comes from the expenses in {group.name}. Open any of them
         to see how it was worked out.
       </p>
 

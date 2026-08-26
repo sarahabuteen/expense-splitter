@@ -166,7 +166,7 @@ async function assertDebtExists(
     );
     throw new WriteError(
       reversed
-        ? "That's the wrong way round — the debt runs the other way."
+        ? "That's the wrong way round. The debt runs the other way."
         : "There's no debt between those two to settle.",
       409,
     );

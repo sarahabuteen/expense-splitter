@@ -67,6 +67,6 @@ export async function getRate(from: string, to: string): Promise<number> {
     if (cached?.rates[quote]) return cached.rates[quote];
     throw error instanceof RateError
       ? error
-      : new RateError("Couldn't reach the exchange-rate service.");
+      : new RateError("Couldn't reach the currency rate service.");
   }
 }

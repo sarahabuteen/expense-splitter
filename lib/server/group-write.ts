@@ -161,7 +161,7 @@ export async function updateGroup(
 
     if ((count ?? 0) > 0) {
       throw new WriteError(
-        "This group already has expenses, so its currency is locked — every balance was calculated against it.",
+        "This group already has expenses, so its currency is locked. Every balance was calculated against it.",
         409,
       );
     }
@@ -208,7 +208,7 @@ export async function deleteGroup(groupId: string) {
   const outstanding = (balances ?? []).filter((b) => !isSettled(Number(b.balance_minor)));
   if (outstanding.length > 0) {
     throw new WriteError(
-      "Settle everyone up before deleting this group — otherwise people lose track of what they're owed.",
+      "Settle everyone up before deleting this group, otherwise people lose track of what they're owed.",
       409,
     );
   }

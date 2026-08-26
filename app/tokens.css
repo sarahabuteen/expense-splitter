@@ -1,16 +1,24 @@
 /*
   Theme strategy
   --------------
-  Light is the default. Dark applies in two ways:
+  Dark is the default. The root layout renders `data-theme="dark"` on <html>,
+  so dark is what everyone sees until they choose otherwise.
 
-  1. Automatically, when the user's OS prefers dark (`prefers-color-scheme`).
-  2. Manually, when you set `data-theme="dark"` on <html> from a toggle.
+  The values below are still authored light first, because that is what the
+  bare `:root` block has to hold: a token whose only definition sits inside a
+  media query or an attribute selector has no value when neither applies.
+  Dark then applies in two ways:
 
-  A manual choice always wins: `data-theme="light"` forces light even on a
-  dark OS, and `data-theme="dark"` forces dark even on a light OS.
+  1. Automatically, when the user's OS prefers dark (`prefers-color-scheme`),
+     which covers the "system" setting once the attribute is removed.
+  2. By attribute, which is both the default markup and what the toggle sets.
 
-  To avoid a flash of the wrong theme, set `data-theme` from a small inline
-  script in <head> (reading the saved preference) before the first paint.
+  An explicit choice always wins: `data-theme="light"` forces light even on a
+  dark OS, and `data-theme="dark"` forces dark even on a light OS. Picking
+  "system" removes the attribute so the OS decides.
+
+  To avoid a flash of the wrong theme, a small inline script in <head> reads
+  the saved preference and corrects the attribute before the first paint.
   That script lives in `lib/theme.ts` and is rendered from the root layout.
 
   The dark palette is intentionally defined twice below. Keep the two blocks

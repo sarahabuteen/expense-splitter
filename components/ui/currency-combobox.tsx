@@ -293,8 +293,8 @@ function measure(input: HTMLInputElement | null): Anchor | null {
 function label(currency: Currency): string {
   // SAR's symbol is drawn as an icon, so the text label omits it rather than
   // falling back to the superseded glyph.
-  if (currency.code === "SAR") return `${currency.code} — ${currency.name}`;
-  return `${currency.symbol}  ${currency.code} — ${currency.name}`;
+  if (currency.code === "SAR") return `${currency.code} · ${currency.name}`;
+  return `${currency.symbol}  ${currency.code} · ${currency.name}`;
 }
 
 function ChevronIcon({ open }: { open: boolean }) {

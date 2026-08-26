@@ -22,7 +22,7 @@ export function GroupsEmptyState() {
         <h2 className="mt-6 text-lg font-bold tracking-tight">No groups yet</h2>
 
         <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-          A group is anywhere you share costs — a trip, a flat, a regular lunch.
+          A group is anywhere you share costs: a trip, a flat, a regular lunch.
           Create one and add the people you split with.
         </p>
 
@@ -33,7 +33,7 @@ export function GroupsEmptyState() {
         </div>
 
         <ul className="mt-8 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-text-secondary">
-          <Hint>Add people by name — nobody needs an account</Hint>
+          <Hint>Add people by name, nobody needs an account</Hint>
           <Hint>Settle in any of 35 currencies</Hint>
         </ul>
       </div>

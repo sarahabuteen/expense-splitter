@@ -54,12 +54,12 @@ export function RateField({
       } else {
         setText("");
         onChange(0);
-        setNote("Couldn't reach the rate service — enter the rate you were charged.");
+        setNote("Couldn't reach the rate service. Enter the rate you were charged.");
       }
     } catch {
       setText("");
       onChange(0);
-      setNote("Couldn't reach the rate service — enter the rate you were charged.");
+      setNote("Couldn't reach the rate service. Enter the rate you were charged.");
     } finally {
       setLoading(false);
     }

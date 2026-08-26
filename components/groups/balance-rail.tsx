@@ -187,7 +187,7 @@ export function BalanceRail({ group }: { group: GroupPage }) {
           <div className="mt-4 border-t border-border pt-4">
             <p className="text-xs leading-relaxed text-text-secondary">
               It&rsquo;s just you in here so far. Add the people you&rsquo;re
-              sharing costs with — a name is all you need.
+              sharing costs with. A name is all you need.
             </p>
             <ButtonLink
               href={`/groups/${group.id}/settings`}

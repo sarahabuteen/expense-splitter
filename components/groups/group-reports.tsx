@@ -128,12 +128,12 @@ export function GroupReports({
             <Stat label="Expenses" value={String(expenseCount)} mono />
             <Stat
               label="Biggest category"
-              value={totals[0]?.category ?? "—"}
+              value={totals[0]?.category ?? "None"}
               note={totals[0] ? `${totals[0].percentage.toFixed(0)}% of spending` : undefined}
             />
             <Stat
               label="Carried most"
-              value={topContributor?.name.split(" ")[0] ?? "—"}
+              value={topContributor?.name.split(" ")[0] ?? "Nobody"}
               note={
                 topContributor
                   ? `${formatMoney(topContributor.paidMinor, currency)} paid`

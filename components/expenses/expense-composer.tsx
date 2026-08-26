@@ -346,7 +346,7 @@ export function ExpenseComposer({
                 payer ? <Avatar name={payer.name} color={payer.color} size="xs" /> : null
               }
             >
-              {payer?.isViewer ? "You" : (payer?.name.split(" ")[0] ?? "—")}
+              {payer?.isViewer ? "You" : (payer?.name.split(" ")[0] ?? "Not set")}
             </Chip>
 
             <Chip

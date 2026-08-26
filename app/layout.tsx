@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Manrope, IBM_Plex_Sans_Arabic, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
-import { NO_FLASH_SCRIPT } from "@/lib/theme";
+import { DEFAULT_THEME, NO_FLASH_SCRIPT } from "@/lib/theme";
 
 // The design's face. Variable, so no weight array is needed.
 const manrope = Manrope({
@@ -31,10 +31,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    // suppressHydrationWarning: the inline script below mutates <html> before
-    // React hydrates, which React would otherwise flag as a mismatch.
+    // data-theme is rendered on the server so dark is the default even before
+    // any script runs; the inline script below corrects it for a saved light or
+    // system preference.
+    // suppressHydrationWarning: that script mutates <html> before React
+    // hydrates, which React would otherwise flag as a mismatch.
     <html
       lang="en"
+      data-theme={DEFAULT_THEME}
       suppressHydrationWarning
       className={`${manrope.variable} ${plexArabic.variable} ${plexMono.variable} h-full antialiased`}
     >

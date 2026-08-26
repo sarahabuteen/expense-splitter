@@ -87,7 +87,7 @@ export function SettlePlan({ group }: { group: GroupDetail }) {
             <>
               The debts exactly as they arose, expense by expense. Some cancel
               each other out in a circle, which is why the simplified plan needs
-              fewer payments — and why someone already square can appear here.
+              fewer payments, and why someone already square can appear here.
             </>
           )}
         </p>
