@@ -97,6 +97,15 @@
   --detail-pane-width: 22rem;
   --page-max-width: 80rem;
 
+  /* Project addition: a destructive FILL.
+     The owe/error tokens are calibrated for coloured text on a page
+     background. A solid button needs a red dark enough to carry white text:
+     white on #d32637 is 5.1:1, and on the dark variant below 5.5:1, where
+     white on --color-owe would be 2.7:1 and fail AA. */
+  --color-danger: #d32637;
+  --color-danger-hover: #b31f2e;
+  --color-danger-foreground: #ffffff;
+
   /* Project addition: member avatar colours, taken from the sample data.
      Not part of the shipped palette — against the near-monochrome UI these are
      the one place colour is allowed to pop, for member identity only. */
@@ -144,6 +153,10 @@
 
     --color-focus: #5b8def;
 
+    --color-danger: #c62b3a;
+    --color-danger-hover: #d93b4a;
+    --color-danger-foreground: #ffffff;
+
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
@@ -180,6 +193,10 @@
   --color-owed-subtle: #102a22;
 
   --color-focus: #5b8def;
+
+  --color-danger: #c62b3a;
+  --color-danger-hover: #d93b4a;
+  --color-danger-foreground: #ffffff;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);

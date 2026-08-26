@@ -1,4 +1,5 @@
 import { Avatar } from "@/components/ui/avatar";
+import { ButtonLink } from "@/components/ui/button";
 import { formatMoney, formatSignedMoney } from "@/lib/format";
 import { isSettled } from "@/lib/balances";
 import type { GroupDetail } from "@/lib/types";
@@ -10,9 +11,14 @@ export function BalanceRail({ group }: { group: GroupDetail }) {
   // Both already resolved server-side by simplifyDebts, keyed on member ids.
   const { yours, others } = group.plan;
   const owedToViewer = yours?.viewerRole === "payee";
+  // With nothing logged there is no balance to state and nothing to settle.
+  // Showing "$0.00 you are owed" and an empty suggestions card is noise.
+  const hasActivity = group.expenseCount > 0;
+  const soloMember = group.members.length < 2;
 
   return (
     <div className="flex flex-col gap-4">
+      {hasActivity ? (
       <Card>
         <div className="flex items-start gap-3.5">
           <span
@@ -63,7 +69,9 @@ export function BalanceRail({ group }: { group: GroupDetail }) {
           </div>
         </dl>
       </Card>
+      ) : null}
 
+      {hasActivity ? (
       <Card>
         <h2 className="text-sm font-semibold text-text-primary">Suggested settlements</h2>
         <p className="mt-1 text-xs text-text-secondary">
@@ -135,6 +143,7 @@ export function BalanceRail({ group }: { group: GroupDetail }) {
           </div>
         ) : null}
       </Card>
+      ) : null}
 
       <Card>
         <h2 className="text-sm font-semibold text-text-primary">Member balances</h2>
@@ -164,6 +173,22 @@ export function BalanceRail({ group }: { group: GroupDetail }) {
             );
           })}
         </ul>
+
+        {soloMember ? (
+          <div className="mt-4 border-t border-border pt-4">
+            <p className="text-xs leading-relaxed text-text-secondary">
+              It&rsquo;s just you in here so far. Add the people you&rsquo;re
+              sharing costs with — a name is all you need.
+            </p>
+            <ButtonLink
+              href={`/groups/${group.id}/settings`}
+              variant="primary"
+              className="mt-3 h-9 w-full text-xs"
+            >
+              Add people
+            </ButtonLink>
+          </div>
+        ) : null}
       </Card>
     </div>
   );

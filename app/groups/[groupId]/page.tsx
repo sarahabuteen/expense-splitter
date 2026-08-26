@@ -6,7 +6,6 @@ import { ActivityList } from "@/components/groups/activity-list";
 import { ExpenseComposer } from "@/components/expenses/expense-composer";
 import { AvatarStack } from "@/components/ui/avatar";
 import { BalanceRail } from "@/components/groups/balance-rail";
-import { GroupEmptyState } from "@/components/groups/group-empty-state";
 import { formatMoney } from "@/lib/format";
 import { getGroup } from "@/lib/server/groups";
 
@@ -24,8 +23,6 @@ export default async function GroupPage({ params }: PageProps<"/groups/[groupId]
   const { groupId } = await params;
   const group = await getGroup(groupId);
   if (!group) notFound();
-
-  const isNew = group.expenseCount === 0;
 
   const rows = group.activity;
   const expenses = rows.filter((r) => r.kind === "expense").length;
@@ -45,8 +42,6 @@ export default async function GroupPage({ params }: PageProps<"/groups/[groupId]
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          {isNew ? null : (
-            <>
           <ButtonLink href={`/groups/${group.id}/settle`}>
             <SettleIcon />
             Settle up
@@ -55,8 +50,6 @@ export default async function GroupPage({ params }: PageProps<"/groups/[groupId]
             <PlusIcon />
             Add expense
           </Button>
-            </>
-          )}
           <ButtonLink href={`/groups/${group.id}/settings`} size="icon">
             <span className="sr-only">Group settings</span>
             <GearIcon />
@@ -64,15 +57,6 @@ export default async function GroupPage({ params }: PageProps<"/groups/[groupId]
         </div>
       </div>
 
-      {isNew ? (
-        <div className="mt-8 flex flex-col gap-6">
-          {group.members.length > 1 ? (
-            <ExpenseComposer members={group.members} currency={group.currency} />
-          ) : null}
-          <GroupEmptyState group={group} />
-        </div>
-      ) : (
-        <>
       {/* One meta line: totals at a glance, then out of the way. */}
       <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-3 text-sm">
         <span className="flex items-center gap-2">
@@ -105,7 +89,11 @@ export default async function GroupPage({ params }: PageProps<"/groups/[groupId]
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_var(--container-detail)]">
         <section>
-          <ExpenseComposer members={group.members} currency={group.currency} />
+          <ExpenseComposer
+            groupId={group.id}
+            members={group.members}
+            currency={group.currency}
+          />
 
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <button
@@ -127,7 +115,12 @@ export default async function GroupPage({ params }: PageProps<"/groups/[groupId]
           </div>
 
           <div className="mt-3">
-            <ActivityList rows={rows} groupCurrency={group.currency} />
+            <ActivityList
+              rows={rows}
+              groupId={group.id}
+              groupCurrency={group.currency}
+              canEdit={!group.isDemo}
+            />
           </div>
         </section>
 
@@ -135,8 +128,6 @@ export default async function GroupPage({ params }: PageProps<"/groups/[groupId]
           <BalanceRail group={group} />
         </aside>
       </div>
-        </>
-      )}
     </main>
   );
 }

@@ -1,6 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+
+import { ApiError, groupsApi } from "@/lib/client/api";
+import { Button } from "@/components/ui/button";
+import { TrashIcon } from "@/components/ui/trash-icon";
 
 import { Avatar } from "@/components/ui/avatar";
 import { CategoryIcon } from "@/components/ui/category-icon";
@@ -19,12 +24,47 @@ import type { ActivityRow } from "@/lib/types";
  */
 export function ActivityRowItem({
   row,
+  groupId,
   groupCurrency,
+  canEdit,
 }: {
   row: ActivityRow;
+  groupId: string;
   groupCurrency: string;
+  /** False for demo groups, which nobody may write to. */
+  canEdit: boolean;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function remove() {
+    // Deleting an expense changes what everyone owes, so this is one of the
+    // few places a confirmation genuinely earns its interruption.
+    if (
+      !window.confirm(
+        `Delete "${row.kind === "expense" ? row.title : "this settlement"}"? Everyone's balance will change.`,
+      )
+    ) {
+      return;
+    }
+    setPending(true);
+    setError(null);
+    try {
+      await groupsApi.deleteExpense(groupId, row.id);
+      router.refresh();
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.requiresAuth
+            ? "Sign in to change this group."
+            : err.message
+          : "Something went wrong.",
+      );
+      setPending(false);
+    }
+  }
   const settlement = row.kind === "settlement";
   const converted = row.currency !== groupCurrency;
 
@@ -148,6 +188,26 @@ export function ActivityRowItem({
                   </li>
                 ))}
               </ul>
+
+              {canEdit ? (
+                <div className="mt-3 flex items-center gap-2 border-t border-border-subtle pt-3">
+                  <Button
+                    type="button"
+                    variant="danger"
+                    disabled={pending}
+                    onClick={remove}
+                    className="h-8 px-3 text-xs"
+                  >
+                    <TrashIcon />
+                    {pending ? "Deleting…" : "Delete"}
+                  </Button>
+                  {error ? (
+                    <span role="alert" className="text-xs font-medium text-owe">
+                      {error}
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
             </>
           ) : (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-secondary">

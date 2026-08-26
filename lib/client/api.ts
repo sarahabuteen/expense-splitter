@@ -39,6 +39,19 @@ async function send<T>(url: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
+export type ExpenseBody = {
+  description: string;
+  amountMinor: number;
+  currency: string;
+  date: string;
+  category: string;
+  paidBy: string;
+  splitType: "equal" | "exact" | "percentage" | "shares";
+  participants: string[];
+  values?: Record<string, number>;
+  exchangeRate?: number;
+};
+
 export const groupsApi = {
   create: (input: {
     name: string;
@@ -60,6 +73,23 @@ export const groupsApi = {
     send<{ id: string }>(`/api/groups/${groupId}/members`, {
       method: "POST",
       body: JSON.stringify(input),
+    }),
+
+  createExpense: (groupId: string, input: ExpenseBody) =>
+    send<{ id: string }>(`/api/groups/${groupId}/expenses`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+
+  updateExpense: (groupId: string, expenseId: string, input: ExpenseBody) =>
+    send<{ id: string }>(`/api/groups/${groupId}/expenses/${expenseId}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+
+  deleteExpense: (groupId: string, expenseId: string) =>
+    send<{ id: string }>(`/api/groups/${groupId}/expenses/${expenseId}`, {
+      method: "DELETE",
     }),
 
   removeMember: (groupId: string, memberId: string) =>

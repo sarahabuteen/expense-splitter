@@ -1,6 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+
+import { ApiError, groupsApi } from "@/lib/client/api";
 
 import { Avatar } from "@/components/ui/avatar";
 import { CategoryIcon } from "@/components/ui/category-icon";
@@ -37,13 +40,18 @@ import type { GroupMember } from "@/lib/types";
  * UI ONLY: submitting does nothing yet.
  */
 export function ExpenseComposer({
+  groupId,
   members,
   currency,
 }: {
+  groupId: string;
   members: GroupMember[];
   currency: string;
 }) {
+  const router = useRouter();
   const viewer = members.find((m) => m.isViewer) ?? members[0];
+  const [pending, setPending] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const [expanded, setExpanded] = useState(false);
   const [amountText, setAmountText] = useState("");
@@ -135,9 +143,43 @@ export function ExpenseComposer({
       className="rounded-lg border border-border bg-surface"
     >
       <form
-        onSubmit={(event) => {
-          // UI only — not wired to an API yet.
+        onSubmit={async (event) => {
           event.preventDefault();
+          setPending(true);
+          setSubmitError(null);
+          try {
+            await groupsApi.createExpense(groupId, {
+              description: description.trim(),
+              amountMinor: totalMinor,
+              currency: expenseCurrency,
+              date,
+              category,
+              paidBy: payerId,
+              splitType,
+              participants,
+              values,
+            });
+            // Reset to the fast-path defaults so the next one is two fields again.
+            setAmountText("");
+            setDescription("");
+            setExpanded(false);
+            setValues({});
+            setSplitType("equal");
+            setParticipants(members.map((m) => m.id));
+            // Server Components hold the ledger and every balance, so they
+            // have to re-read for the new expense to appear.
+            router.refresh();
+          } catch (err) {
+            setSubmitError(
+              err instanceof ApiError
+                ? err.requiresAuth
+                  ? "Sign in to add expenses to a group of your own."
+                  : err.message
+                : "Something went wrong.",
+            );
+          } finally {
+            setPending(false);
+          }
         }}
       >
         {/* The fast path: amount and description, nothing else. */}
@@ -191,15 +233,25 @@ export function ExpenseComposer({
             <Button
               type="submit"
               variant="primary"
-              disabled={!canSubmit}
+              disabled={!canSubmit || pending}
+              aria-busy={pending}
               className="px-5"
             >
-              Add
+              {pending ? "Adding…" : "Add"}
             </Button>
           </div>
         </div>
 
         {/* Defaults, stated out loud. Each is a button into the full form. */}
+        {submitError ? (
+          <p
+            role="alert"
+            className="mx-4 mb-3 rounded-md border border-owe/30 bg-owe-subtle px-3 py-2 text-sm text-owe"
+          >
+            {submitError}
+          </p>
+        ) : null}
+
         {amountError ? (
           <p
             id="composer-amount-error"

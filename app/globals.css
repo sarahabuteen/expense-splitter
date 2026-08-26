@@ -22,6 +22,9 @@
   --color-owe-subtle: var(--color-owe-subtle);
   --color-owed-subtle: var(--color-owed-subtle);
   --color-focus: var(--color-focus);
+  --color-danger: var(--color-danger);
+  --color-danger-hover: var(--color-danger-hover);
+  --color-danger-foreground: var(--color-danger-foreground);
 
   /* Project addition: member avatars. */
   --color-avatar-indigo: var(--color-avatar-indigo);

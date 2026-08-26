@@ -10,7 +10,7 @@ import Link from "next/link";
  * looks misaligned even though both are 40px tall.
  */
 
-type Variant = "primary" | "secondary" | "ghost";
+type Variant = "primary" | "secondary" | "ghost" | "danger";
 type Size = "md" | "icon";
 
 const BASE =
@@ -25,6 +25,10 @@ const VARIANTS: Record<Variant, string> = {
     "border-border bg-surface text-text-primary hover:bg-bg-tertiary",
   ghost:
     "border-transparent bg-transparent text-text-secondary hover:bg-bg-tertiary hover:text-text-primary",
+  // Solid fill, white label. Uses --color-danger rather than --color-owe:
+  // the owe token is for text on a page, and white on it fails AA in dark mode.
+  danger:
+    "border-transparent bg-danger text-danger-foreground font-semibold hover:bg-danger-hover",
 };
 
 const SIZES: Record<Size, string> = {

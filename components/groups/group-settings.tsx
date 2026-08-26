@@ -7,6 +7,7 @@ import { ApiError, groupsApi } from "@/lib/client/api";
 
 import { Avatar } from "@/components/ui/avatar";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { TrashIcon } from "@/components/ui/trash-icon";
 import { AddMemberRow } from "./add-member-row";
 import { CurrencyCombobox } from "@/components/ui/currency-combobox";
 import { formatMoney, formatSignedMoney } from "@/lib/format";
@@ -253,8 +254,9 @@ export function GroupSettings({ group }: { group: GroupSummary }) {
                 router.push("/groups"),
               );
             }}
-            className="border-owe/40 bg-owe-subtle text-owe hover:bg-owe/10"
+            variant="danger"
           >
+            <TrashIcon className="size-4" />
             {pending === "delete" ? "Deleting…" : "Delete this group"}
           </Button>
           {unsettled.length > 0 ? (
