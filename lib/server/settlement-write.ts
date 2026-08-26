@@ -8,6 +8,7 @@ import { getGroup } from "./groups";
 import { getRate, RateError } from "./rates";
 import { requireUser } from "@/lib/supabase/actor";
 import { WriteError } from "./group-write";
+import { actorName, recordEvent } from "./events";
 
 /**
  * Recording and undoing settlements.
@@ -112,6 +113,21 @@ export async function createSettlement(groupId: string, input: SettlementInput) 
   if (error) throw new WriteError(error.message, 400);
   if (!data?.length) throw notFound();
 
+  const names = await memberNames(db, [input.fromMember, input.toMember]);
+  await recordEvent(db, {
+    groupId,
+    kind: "settlement_added",
+    actorId: userId,
+    actorName: await actorName(db, userId),
+    subject: `${names.get(input.fromMember) ?? "Someone"} → ${names.get(input.toMember) ?? "someone"}`,
+    detail: {
+      settlementId: data[0].id,
+      amountMinor: input.amountMinor,
+      currency: input.currency.toUpperCase(),
+      convertedMinor,
+    },
+  });
+
   return { id: data[0].id as string };
 }
 
@@ -176,8 +192,35 @@ export async function deleteSettlement(groupId: string, settlementId: string) {
     .delete()
     .eq("id", settlementId)
     .eq("group_id", groupId)
-    .select("id");
+    .select("id, from_member, to_member, amount_minor, currency");
 
   if (!data?.length) throw new WriteError("That settlement doesn't exist.", 404);
+
+  const gone = data[0];
+  const names = await memberNames(db, [
+    gone.from_member as string,
+    gone.to_member as string,
+  ]);
+  await recordEvent(db, {
+    groupId,
+    kind: "settlement_deleted",
+    actorId: userId,
+    actorName: await actorName(db, userId),
+    subject: `${names.get(gone.from_member as string) ?? "Someone"} → ${names.get(gone.to_member as string) ?? "someone"}`,
+    detail: {
+      amountMinor: Number(gone.amount_minor),
+      currency: gone.currency as string,
+    },
+  });
+
   return { id: settlementId };
+}
+
+/** Member names for the feed's subject line, in one read. */
+async function memberNames(
+  db: Awaited<ReturnType<typeof createRouteClient>>,
+  ids: string[],
+): Promise<Map<string, string>> {
+  const { data } = await db.from("members").select("id, name").in("id", ids);
+  return new Map((data ?? []).map((m) => [m.id as string, m.name as string]));
 }

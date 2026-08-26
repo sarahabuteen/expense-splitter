@@ -138,7 +138,8 @@ test("direct debts net out per pair, and settlements reduce them", () => {
     kind: "expense" as const,
     id, title: id, category: "Other", payer: "", payerColor: "indigo" as const,
     payerId, date: "2026-01-01", amountMinor: 0, currency: "USD",
-    splitType: "equal" as const, convertedMinor: 0, relativeDate: "", fullDate: "",
+    splitType: "equal" as const, convertedMinor: 0, exchangeRate: 1, rateIsManual: false,
+    relativeDate: "", fullDate: "",
     splits: owes.map(([memberId, amount]) => ({
       memberId, name: memberId, color: "indigo" as const,
       amountMinor: amount, convertedAmountMinor: amount,

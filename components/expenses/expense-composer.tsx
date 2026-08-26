@@ -15,6 +15,8 @@ import { CurrencyCombobox } from "@/components/ui/currency-combobox";
 import { CategoryPicker } from "./category-picker";
 import { SplitEditor } from "./split-editor";
 import { SplitPreview } from "./split-preview";
+import { RateField } from "./rate-field";
+import { AMOUNT_FIELD_ID } from "./add-expense-button";
 import { decimalsFor } from "@/lib/currencies";
 import { formatMoney } from "@/lib/format";
 import {
@@ -78,6 +80,11 @@ export function ExpenseComposer({
   const [splitType, setSplitType] = useState<SplitType>(editing?.splitType ?? "equal");
   const [participants, setParticipants] = useState(() =>
     editing ? editing.splits.map((s) => s.memberId) : members.map((m) => m.id),
+  );
+  // null = let the server fetch the day's rate. An edit that was booked at a
+  // hand-set rate reopens at that rate, so re-saving doesn't silently reprice it.
+  const [manualRate, setManualRate] = useState<number | null>(
+    editing?.rateIsManual ? editing.exchangeRate : null,
   );
   const [values, setValues] = useState<Record<string, number>>(() =>
     editing ? initialValues(editing) : {},
@@ -163,6 +170,8 @@ export function ExpenseComposer({
       splitType,
       participants,
       values,
+      // Omitted unless set, which is what tells the server to fetch one.
+      ...(manualRate !== null ? { exchangeRate: manualRate } : {}),
     };
 
     setPending(true);
@@ -182,6 +191,7 @@ export function ExpenseComposer({
       setSplitType("equal");
       setParticipants(members.map((m) => m.id));
       setExpenseCurrency(currency);
+      setManualRate(null);
       // Server Components hold the ledger and every balance, so they have to
       // re-read for the change to appear.
       router.refresh();
@@ -195,8 +205,15 @@ export function ExpenseComposer({
   }
 
   const payer = members.find((m) => m.id === payerId);
+  const rateNeeded = expenseCurrency !== currency;
   const canSubmit =
-    totalMinor > 0 && !amountError && description.trim() !== "" && errors.length === 0;
+    totalMinor > 0 &&
+    !amountError &&
+    description.trim() !== "" &&
+    errors.length === 0 &&
+    // An override that has been opened but left blank would otherwise post a
+    // zero rate, which the server rejects with a less helpful message.
+    !(rateNeeded && manualRate !== null && manualRate <= 0);
 
   return (
     <section
@@ -243,6 +260,7 @@ export function ExpenseComposer({
             <label className="min-w-0 flex-1">
               <span className="sr-only">Amount</span>
               <input
+                id={AMOUNT_FIELD_ID}
                 value={amountText}
                 onChange={(e) => setAmountText(e.target.value)}
                 // decimal, not numeric: numeric hides the decimal point on iOS.
@@ -458,10 +476,13 @@ export function ExpenseComposer({
             </div>
 
             {expenseCurrency !== currency ? (
-              <p className="rounded-md border border-border bg-bg-primary px-3 py-2 text-xs text-text-secondary">
-                Paid in {expenseCurrency}; converted to {currency} at the day&rsquo;s
-                rate when saved.
-              </p>
+              <RateField
+                from={expenseCurrency}
+                to={currency}
+                totalMinor={totalMinor}
+                rate={manualRate}
+                onChange={setManualRate}
+              />
             ) : null}
 
             <Field label="Category">
@@ -611,6 +632,8 @@ export type EditableExpense = {
   category: string;
   payerId: string;
   splitType: SplitType;
+  exchangeRate: number;
+  rateIsManual: boolean;
   splits: {
     memberId: string;
     amountMinor: number;

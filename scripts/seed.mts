@@ -38,12 +38,13 @@ for (const g of existing ?? []) {
   const { data: exps } = await db.from("expenses").select("id").eq("group_id", g.id);
   for (const e of exps ?? []) await db.from("expense_splits").delete().eq("expense_id", e.id);
   await db.from("expenses").delete().eq("group_id", g.id);
+  await db.from("events").delete().eq("group_id", g.id);
   await db.from("members").delete().eq("group_id", g.id);
   await db.from("groups").delete().eq("id", g.id);
 }
 if (existing?.length) console.log(`cleared ${existing.length} existing demo group(s)`);
 
-const counts = { groups: 0, members: 0, expenses: 0, splits: 0, settlements: 0 };
+const counts = { groups: 0, members: 0, expenses: 0, splits: 0, settlements: 0, events: 0 };
 
 for (const built of groups) {
   const { data: group, error: gErr } = await db
@@ -62,6 +63,47 @@ for (const built of groups) {
 
   // Fixture member ids -> real uuids, matched by position.
   const memberId = new Map(built.members.map((m, i) => [m.fixtureId, members[i].id as string]));
+  const nameOf = new Map(built.members.map((m, i) => [m.fixtureId, members[i].name as string]));
+
+  // Guest mode is the showcase, so the demo groups get a history too — an
+  // empty activity page would read as a broken feature rather than a new one.
+  // Timestamps are derived from each row's own date so the feed is ordered
+  // like the events actually happened.
+  const events: Record<string, unknown>[] = [];
+  // The fixture mixes shapes: group.createdAt is a full ISO timestamp, while
+  // expense and settlement dates were already truncated to YYYY-MM-DD for
+  // their `date` columns. Accept either, and give a bare date a midday time so
+  // the ordering offsets below cannot cross a day boundary.
+  const at = (value: string, offsetMinutes = 0) => {
+    const base = /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T12:00:00Z` : value;
+    const parsed = new Date(base);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new Error(`seed: can't read "${value}" as a date`);
+    }
+    return new Date(parsed.getTime() + offsetMinutes * 60_000).toISOString();
+  };
+
+  events.push({
+    group_id: group.id,
+    kind: "group_created",
+    actor_id: null,
+    actor_name: members[0].name,
+    subject: built.group.name,
+    detail: { memberCount: members.length, currency: built.group.currency },
+    created_at: at(built.group.created_at ?? built.expenses[0]?.date ?? "2026-01-01", -60),
+  });
+
+  for (const [i, m] of built.members.slice(1).entries()) {
+    events.push({
+      group_id: group.id,
+      kind: "member_added",
+      actor_id: null,
+      actor_name: members[0].name,
+      subject: m.name,
+      detail: {},
+      created_at: at(built.group.created_at ?? built.expenses[0]?.date ?? "2026-01-01", -50 + i),
+    });
+  }
 
   for (const e of built.expenses) {
     const { data: expense, error: eErr } = await db
@@ -96,6 +138,21 @@ for (const built of groups) {
     );
     if (sErr) throw new Error(`splits for ${e.description}: ${sErr.message}`);
     counts.splits += e.splits.length;
+
+    events.push({
+      group_id: group.id,
+      kind: "expense_added",
+      actor_id: null,
+      actor_name: nameOf.get(e.paid_by) ?? "Someone",
+      subject: e.description,
+      detail: {
+        expenseId: expense.id,
+        amountMinor: e.amount_minor,
+        currency: e.currency,
+        convertedMinor: e.converted_amount_minor,
+      },
+      created_at: at(e.date),
+    });
   }
 
   if (built.settlements.length) {
@@ -113,7 +170,27 @@ for (const built of groups) {
     );
     if (stErr) throw new Error(`settlements for ${built.group.name}: ${stErr.message}`);
     counts.settlements += built.settlements.length;
+
+    for (const st of built.settlements) {
+      events.push({
+        group_id: group.id,
+        kind: "settlement_added",
+        actor_id: null,
+        actor_name: nameOf.get(st.from_member) ?? "Someone",
+        subject: `${nameOf.get(st.from_member) ?? "Someone"} → ${nameOf.get(st.to_member) ?? "someone"}`,
+        detail: {
+          amountMinor: st.amount_minor,
+          currency: st.currency,
+          convertedMinor: st.converted_amount_minor,
+        },
+        created_at: at(st.date),
+      });
+    }
   }
+
+  const { error: evErr } = await db.from("events").insert(events);
+  if (evErr) throw new Error(`events for ${built.group.name}: ${evErr.message}`);
+  counts.events += events.length;
 }
 
 console.log("seeded:", counts);

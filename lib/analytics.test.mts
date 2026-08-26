@@ -29,6 +29,8 @@ function expense(
     splits: [],
     payerId,
     convertedMinor,
+    exchangeRate: 1,
+    rateIsManual: false,
     relativeDate: "",
     fullDate: "",
   } as ActivityRow;

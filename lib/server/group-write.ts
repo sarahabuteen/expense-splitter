@@ -5,6 +5,7 @@ import { createRouteClient } from "@/lib/supabase/server";
 import { isSettled } from "@/lib/balances";
 import { nextAvatarColor, type AvatarColor } from "@/lib/avatar-colors";
 import { currencyFor } from "@/lib/currencies";
+import { actorName, changedFields, recordEvent } from "./events";
 
 /**
  * Every group mutation.
@@ -80,7 +81,7 @@ export async function createGroup(input: {
       description: input.description?.trim() || null,
       currency: input.currency.toUpperCase(),
     })
-    .select("id")
+    .select("id, name, currency")
     .single();
 
   if (error || !group) throw new WriteError(error?.message ?? "Couldn't create the group.", 400);
@@ -114,6 +115,15 @@ export async function createGroup(input: {
 
   const { error: memberError } = await db.from("members").insert(rows);
   if (memberError) throw new WriteError(memberError.message, 400);
+
+  await recordEvent(db, {
+    groupId: group.id as string,
+    kind: "group_created",
+    actorId: userId,
+    actorName: rows[0].name,
+    subject: group.name as string,
+    detail: { memberCount: rows.length, currency: group.currency },
+  });
 
   return { id: group.id as string };
 }
@@ -160,8 +170,27 @@ export async function updateGroup(
 
   if (Object.keys(patch).length === 0) return { id: groupId };
 
-  const { data } = await db.from("groups").update(patch).eq("id", groupId).select("id");
+  const { data } = await db
+    .from("groups")
+    .update(patch)
+    .eq("id", groupId)
+    .select("id, name");
   if (!data?.length) throw notFound();
+
+  await recordEvent(db, {
+    groupId,
+    kind: "group_updated",
+    actorId: userId,
+    actorName: await actorName(db, userId),
+    subject: data[0].name as string,
+    detail: {
+      changed: changedFields({}, patch, {
+        name: "name",
+        description: "description",
+        currency: "currency",
+      }),
+    },
+  });
 
   return { id: groupId };
 }
@@ -242,6 +271,15 @@ export async function addMember(
   if (error) throw new WriteError(error.message, 400);
   if (!data?.length) throw notFound();
 
+  await recordEvent(db, {
+    groupId,
+    kind: "member_added",
+    actorId: userId,
+    actorName: await actorName(db, userId),
+    subject: name,
+    detail: { memberId: data[0].id, hasEmail: Boolean(input.email?.trim()) },
+  });
+
   return { id: data[0].id as string };
 }
 
@@ -288,9 +326,17 @@ export async function removeMember(groupId: string, memberId: string) {
     .delete()
     .eq("id", memberId)
     .eq("group_id", groupId)
-    .select("id");
+    .select("id, name");
 
   if (!data?.length) throw notFound();
+
+  await recordEvent(db, {
+    groupId,
+    kind: "member_removed",
+    actorId: userId,
+    actorName: await actorName(db, userId),
+    subject: data[0].name as string,
+  });
 
   return { id: memberId };
 }

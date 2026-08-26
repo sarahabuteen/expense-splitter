@@ -5,7 +5,8 @@ import { useRef, useState } from "react";
 import { ExpenseComposer, type EditableExpense } from "@/components/expenses/expense-composer";
 import { Ledger } from "./ledger";
 import type { CategoryTotal, Filters } from "@/lib/filters";
-import type { ActivityRow, GroupDetail } from "@/lib/types";
+import type { ActivityRow } from "@/lib/types";
+import type { GroupPage } from "@/lib/server/group-page";
 
 /**
  * Holds the one piece of state the composer and the ledger share: which
@@ -21,7 +22,7 @@ export function GroupWorkspace({
   filters,
   usedCategories,
 }: {
-  group: GroupDetail;
+  group: GroupPage;
   /** Already filtered on the server. */
   rows: ActivityRow[];
   /** Already aggregated on the server. */

@@ -3,16 +3,18 @@ import { notFound } from "next/navigation";
 
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { GroupSettings } from "@/components/groups/group-settings";
-import { getGroup } from "@/lib/server/groups";
+import { getGroup, getGroupName } from "@/lib/server/groups";
 
 export async function generateMetadata({
   params,
 }: PageProps<"/groups/[groupId]/settings">): Promise<Metadata> {
   const { groupId } = await params;
-  const group = await getGroup(groupId);
+  // Only the name — metadata is its own render pass, so a full group load here
+  // would double the work behind every page view.
+  const name = await getGroupName(groupId);
   return {
-    title: group
-      ? `${group.name} settings · Expense Splitter`
+    title: name
+      ? `${name} settings · Expense Splitter`
       : "Group settings · Expense Splitter",
   };
 }

@@ -86,3 +86,55 @@ export function formatFullDate(iso: string): string {
     timeZone: "UTC",
   });
 }
+
+/**
+ * Relative time for the activity feed, which needs the hours the ledger does
+ * not: an expense is dated to a DAY, but an event happened at an INSTANT, and
+ * "today" is a useless answer for something that happened four minutes ago.
+ *
+ * Separate from formatRelativeTime rather than an option on it — that one
+ * appends midnight to a plain date, which would turn a timestamp into an
+ * Invalid Date.
+ */
+export function formatRelativeTimestamp(iso: string, now: Date = new Date()): string {
+  const then = new Date(iso);
+  if (Number.isNaN(then.getTime())) return "";
+
+  const seconds = Math.floor((now.getTime() - then.getTime()) / 1000);
+  if (seconds < 0) return "just now";
+  if (seconds < 60) return "just now";
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days} days ago`;
+  if (days < 31) {
+    const weeks = Math.floor(days / 7);
+    return weeks === 1 ? "last week" : `${weeks} weeks ago`;
+  }
+  if (days < 365) {
+    const months = Math.max(1, Math.round(days / 30));
+    return months === 1 ? "last month" : `${months} months ago`;
+  }
+  const years = Math.max(1, Math.round(days / 365));
+  return years === 1 ? "last year" : `${years} years ago`;
+}
+
+/** The full instant, for the title attribute and assistive tech. */
+export function formatTimestamp(iso: string): string {
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return "";
+  return at.toLocaleString("en-US", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}

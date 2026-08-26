@@ -1,22 +1,27 @@
 import type { Metadata } from "next";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { notFound } from "next/navigation";
 
+import { AddExpenseButton } from "@/components/expenses/add-expense-button";
 import { GroupWorkspace } from "@/components/groups/group-workspace";
 import { AvatarStack } from "@/components/ui/avatar";
 import { BalanceRail } from "@/components/groups/balance-rail";
 import { formatMoney } from "@/lib/format";
-import { applyFilters, categoryTotals, parseFilters } from "@/lib/filters";
-import { getGroup } from "@/lib/server/groups";
+import { parseFilters } from "@/lib/filters";
+import { getGroupName } from "@/lib/server/groups";
+import { getGroupPage, PAGE_SIZE } from "@/lib/server/group-page";
+
+/** A ceiling on `?show=`, so a hand-edited URL cannot ask for everything. */
+const MAX_ROWS = 500;
 
 export async function generateMetadata({
   params,
 }: PageProps<"/groups/[groupId]">): Promise<Metadata> {
   const { groupId } = await params;
-  const group = await getGroup(groupId);
-  return {
-    title: group ? `${group.name} · Expense Splitter` : "Group · Expense Splitter",
-  };
+  // Just the name: generateMetadata runs alongside the page, and loading the
+  // whole group twice for a <title> is the kind of waste #15 is about.
+  const name = await getGroupName(groupId);
+  return { title: name ? `${name} · Expense Splitter` : "Group · Expense Splitter" };
 }
 
 export default async function GroupPage({
@@ -24,19 +29,20 @@ export default async function GroupPage({
   searchParams,
 }: PageProps<"/groups/[groupId]">) {
   const { groupId } = await params;
-  const group = await getGroup(groupId);
-  if (!group) notFound();
+  const query = await searchParams;
 
-  // Filtering and aggregation run HERE, on the server. The client is handed
-  // finished rows and totals; it does not compute either.
-  const filters = parseFilters(await searchParams);
-  const rows = applyFilters(group.activity, filters);
-  const totals = categoryTotals(rows);
-  const usedCategories = [
-    ...new Set(
-      group.activity.filter((r) => r.kind === "expense").map((r) => r.category),
-    ),
-  ].sort();
+  // Filtering, paging and aggregation all run in the DATABASE. The client is
+  // handed one page of finished rows plus totals over everything that matched;
+  // it computes neither.
+  const filters = parseFilters(query);
+  const requested = Number(Array.isArray(query.show) ? query.show[0] : query.show);
+  const limit =
+    Number.isFinite(requested) && requested > 0
+      ? Math.min(Math.round(requested), MAX_ROWS)
+      : PAGE_SIZE;
+
+  const group = await getGroupPage(groupId, { filters, limit });
+  if (!group) notFound();
 
   // No max-width and no mx-auto: the sidebar already narrows the pane, so any
   // further cap just reintroduces dead space. The activity column flexes and
@@ -52,6 +58,10 @@ export default async function GroupPage({
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          <ButtonLink href={`/groups/${group.id}/activity`}>
+            <HistoryIcon />
+            Activity
+          </ButtonLink>
           <ButtonLink href={`/groups/${group.id}/reports`}>
             <ChartIcon />
             Reports
@@ -60,10 +70,7 @@ export default async function GroupPage({
             <SettleIcon />
             Settle up
           </ButtonLink>
-          <Button type="button" variant="primary">
-            <PlusIcon />
-            Add expense
-          </Button>
+          <AddExpenseButton />
           <ButtonLink href={`/groups/${group.id}/settings`} size="icon">
             <span className="sr-only">Group settings</span>
             <GearIcon />
@@ -102,10 +109,10 @@ export default async function GroupPage({
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_var(--container-detail)]">
         <GroupWorkspace
           group={group}
-          rows={rows}
-          totals={totals}
+          rows={group.activity}
+          totals={group.totals}
           filters={filters}
-          usedCategories={usedCategories}
+          usedCategories={group.usedCategories}
         />
 
         <aside className="lg:sticky lg:top-6 lg:self-start">
@@ -129,6 +136,16 @@ function iconProps(size = "size-4") {
   };
 }
 
+function HistoryIcon() {
+  return (
+    <svg {...iconProps()}>
+      <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+      <path d="M3 3v5h5" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
 function ChartIcon() {
   return (
     <svg {...iconProps()}>
@@ -145,13 +162,6 @@ function SettleIcon() {
   );
 }
 
-function PlusIcon() {
-  return (
-    <svg {...iconProps()} strokeWidth={2.2}>
-      <path d="M12 5v14M5 12h14" />
-    </svg>
-  );
-}
 
 
 function ReceiptIcon() {

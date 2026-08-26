@@ -7,6 +7,7 @@ import { createRouteClient } from "@/lib/supabase/server";
 import { getRate, RateError } from "./rates";
 import { requireUser } from "@/lib/supabase/actor";
 import { WriteError } from "./group-write";
+import { actorName, changedFields, recordEvent } from "./events";
 
 /**
  * Expense mutations.
@@ -180,6 +181,20 @@ export async function createExpense(groupId: string, input: ExpenseInput) {
   );
   if (splitError) throw new WriteError(splitError.message, 400);
 
+  await recordEvent(db, {
+    groupId,
+    kind: "expense_added",
+    actorId: userId,
+    actorName: await actorName(db, userId),
+    subject: description,
+    detail: {
+      expenseId: expense.id,
+      amountMinor: booked.amountMinor,
+      currency: booked.currency,
+      convertedMinor: booked.convertedAmountMinor,
+    },
+  });
+
   return { id: expense.id as string };
 }
 
@@ -192,9 +207,11 @@ export async function updateExpense(
   const db = await createRouteClient();
   const group = await assertWritableGroup(db, groupId, userId);
 
+  // The whole row, not just the id: the feed says WHAT changed, which needs
+  // the values as they were before this write.
   const { data: existing } = await db
     .from("expenses")
-    .select("id")
+    .select("id, description, amount_minor, currency, paid_by, date, category_id, split_type")
     .eq("id", expenseId)
     .eq("group_id", groupId)
     .maybeSingle();
@@ -238,6 +255,46 @@ export async function updateExpense(
   );
   if (splitError) throw new WriteError(splitError.message, 400);
 
+  const changed = changedFields(
+    existing as Record<string, unknown>,
+    {
+      description,
+      amount_minor: booked.amountMinor,
+      currency: booked.currency,
+      paid_by: input.paidBy,
+      date: input.date,
+      category_id: categoryId,
+      split_type: input.splitType,
+    },
+    {
+      description: "description",
+      amount_minor: "amount",
+      currency: "currency",
+      paid_by: "who paid",
+      date: "date",
+      category_id: "category",
+      split_type: "split",
+    },
+  );
+
+  await recordEvent(db, {
+    groupId,
+    kind: "expense_edited",
+    actorId: userId,
+    actorName: await actorName(db, userId),
+    subject: description,
+    detail: {
+      expenseId,
+      changed,
+      amountMinor: booked.amountMinor,
+      currency: booked.currency,
+      // Only when the money moved — a renamed expense should not imply it did.
+      ...(Number(existing.amount_minor) !== booked.amountMinor
+        ? { previousAmountMinor: Number(existing.amount_minor) }
+        : {}),
+    },
+  });
+
   return { id: expenseId };
 }
 
@@ -255,8 +312,24 @@ export async function deleteExpense(groupId: string, expenseId: string) {
     .delete()
     .eq("id", expenseId)
     .eq("group_id", groupId)
-    .select("id");
+    // Returned so the feed can name what was deleted; after this statement
+    // there is nothing left to read it from.
+    .select("id, description, amount_minor, currency");
 
   if (!data?.length) throw new WriteError("That expense doesn't exist.", 404);
+
+  const gone = data[0];
+  await recordEvent(db, {
+    groupId,
+    kind: "expense_deleted",
+    actorId: userId,
+    actorName: await actorName(db, userId),
+    subject: gone.description as string,
+    detail: {
+      amountMinor: Number(gone.amount_minor),
+      currency: gone.currency as string,
+    },
+  });
+
   return { id: expenseId };
 }

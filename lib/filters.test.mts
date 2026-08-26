@@ -15,7 +15,8 @@ const expense = (
 ): ActivityRow => ({
   kind: "expense", id, title, category, payer: payerId, payerColor: "indigo",
   payerId, date, amountMinor: convertedMinor, currency: "USD",
-  splitType: "equal", convertedMinor, relativeDate: "", fullDate: "",
+  splitType: "equal", convertedMinor, exchangeRate: 1, rateIsManual: false,
+  relativeDate: "", fullDate: "",
   splits: memberIds.map((memberId) => ({
     memberId, name: memberId, color: "indigo" as const,
     amountMinor: 0, convertedAmountMinor: 0,

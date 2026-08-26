@@ -5,7 +5,7 @@ import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { ExportLinks } from "@/components/groups/export-links";
 import { GroupReports } from "@/components/groups/group-reports";
 import { applyFilters, categoryTotals, parseFilters } from "@/lib/filters";
-import { getGroup } from "@/lib/server/groups";
+import { getGroup, getGroupName } from "@/lib/server/groups";
 import { memberReports } from "@/lib/csv";
 import { memberContributions, spendingOverTime } from "@/lib/analytics";
 
@@ -13,10 +13,10 @@ export async function generateMetadata({
   params,
 }: PageProps<"/groups/[groupId]/reports">): Promise<Metadata> {
   const { groupId } = await params;
-  const group = await getGroup(groupId);
-  return {
-    title: group ? `Reports · ${group.name}` : "Reports · Expense Splitter",
-  };
+  // Only the name — metadata is its own render pass, so a full group load here
+  // would double the work behind every page view.
+  const name = await getGroupName(groupId);
+  return { title: name ? `Reports · ${name}` : "Reports · Expense Splitter" };
 }
 
 export default async function ReportsPage({

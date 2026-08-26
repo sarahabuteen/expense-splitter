@@ -210,6 +210,19 @@ export function ActivityRowItem({
                     value: row.splitType === "equal" ? "Equally" : row.splitType,
                   },
                   { label: "Date", value: row.fullDate },
+                  // Only when it converted: a 1.0 rate inside a single-currency
+                  // group is noise, not a fact.
+                  ...(converted
+                    ? [
+                        {
+                          label: row.rateIsManual ? "Rate (set by hand)" : "Rate",
+                          value: `1 ${row.currency} = ${Number(
+                            row.exchangeRate.toPrecision(6),
+                          )} ${groupCurrency}`,
+                          mono: true,
+                        },
+                      ]
+                    : []),
                 ]}
               />
 
@@ -245,6 +258,8 @@ export function ActivityRowItem({
                         category: row.category,
                         payerId: row.payerId,
                         splitType: row.splitType,
+                        exchangeRate: row.exchangeRate,
+                        rateIsManual: row.rateIsManual,
                         splits: row.splits.map((s) => ({
                           memberId: s.memberId,
                           amountMinor: s.amountMinor,

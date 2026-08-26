@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { ActivityList } from "./activity-list";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { CategoryBreakdown } from "@/components/expenses/category-breakdown";
 import { ExpenseFilters } from "@/components/expenses/expense-filters";
 import {
@@ -16,15 +16,24 @@ import {
   type Filters,
 } from "@/lib/filters";
 import type { EditableExpense } from "@/components/expenses/expense-composer";
-import type { ActivityRow, GroupDetail } from "@/lib/types";
+import type { ActivityRow } from "@/lib/types";
+import type { GroupPage } from "@/lib/server/group-page";
 
 /**
  * The activity column: filters, breakdown, and the timeline itself.
  *
- * Presentation only. The rows arrive already filtered and the totals already
- * aggregated; changing a filter writes it to the URL and the server re-renders.
- * That keeps the arithmetic in one place and makes a filtered view shareable.
+ * Presentation only. The rows arrive already filtered, already paged and the
+ * totals already aggregated; changing a filter writes it to the URL and the
+ * server re-renders. That keeps the arithmetic in one place and makes a
+ * filtered view shareable.
+ *
+ * "Load more" is a link, not a fetch: the page size lives in the URL, so a
+ * deep-scrolled ledger survives a reload and the server stays the only thing
+ * that decides which rows exist.
  */
+/** How many more rows "Load more" asks for. */
+const PAGE_STEP = 25;
+
 export function Ledger({
   group,
   rows,
@@ -34,7 +43,7 @@ export function Ledger({
   editingId,
   onEdit,
 }: {
-  group: GroupDetail;
+  group: GroupPage;
   rows: ActivityRow[];
   totals: CategoryTotal[];
   filters: Filters;
@@ -51,8 +60,16 @@ export function Ledger({
   }
 
   const active = countActiveFilters(filters);
-  const expenses = rows.filter((r) => r.kind === "expense").length;
-  const settlements = rows.length - expenses;
+  // Counted by the database across every matching row — `rows` is one page, so
+  // counting it here would describe the page and call it the group.
+  const expenses = group.matchExpenseCount;
+  const settlements = group.matchSettlementCount;
+
+  function moreHref() {
+    const params = new URLSearchParams(toSearchParams(filters));
+    params.set("show", String(rows.length + PAGE_STEP));
+    return `/groups/${group.id}?${params.toString()}`;
+  }
 
   return (
     <section>
@@ -76,7 +93,7 @@ export function Ledger({
 
         {hasActiveFilters(filters) ? (
           <p className="tabular text-xs text-text-secondary">
-            {rows.length} of {group.activity.length} shown
+            {rows.length} of {group.totalEntries} shown
           </p>
         ) : null}
       </div>
@@ -114,7 +131,7 @@ export function Ledger({
           <div className="rounded-lg border border-border bg-surface px-6 py-12 text-center">
             <p className="text-sm font-medium">Nothing matches those filters</p>
             <p className="mx-auto mt-1.5 max-w-xs text-xs leading-relaxed text-text-secondary">
-              There are {group.activity.length} entries in this group. Try
+              There are {group.totalEntries} entries in this group. Try
               widening the date range or clearing a filter.
             </p>
             <Button
@@ -137,6 +154,17 @@ export function Ledger({
           />
         )}
       </div>
+
+      {group.hasMore ? (
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <ButtonLink href={moreHref()} variant="secondary">
+            Load more
+          </ButtonLink>
+          <p className="tabular text-xs text-text-secondary">
+            Showing {rows.length} of {group.matchCount}
+          </p>
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -92,6 +92,22 @@ export async function listGroups(): Promise<GroupSummary[]> {
   });
 }
 
+/**
+ * Just the group's name, for <title>.
+ *
+ * generateMetadata runs as its own render pass, so calling getGroup() there
+ * loaded every expense in the group a second time purely to read one string.
+ */
+export async function getGroupName(groupId: string): Promise<string | null> {
+  const { db } = await context();
+  const { data } = await db
+    .from("groups")
+    .select("name")
+    .eq("id", groupId)
+    .maybeSingle();
+  return (data?.name as string | undefined) ?? null;
+}
+
 export async function getGroup(groupId: string): Promise<GroupDetail | null> {
   const { db, userId } = await context();
 
@@ -123,7 +139,7 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
     db
       .from("expenses")
       .select(
-        "id, description, amount_minor, currency, paid_by, split_type, date, category_id, converted_amount_minor",
+        "id, description, amount_minor, currency, paid_by, split_type, date, category_id, converted_amount_minor, exchange_rate, rate_is_manual",
       )
       .eq("group_id", groupId)
       .order("date", { ascending: false }),
@@ -181,6 +197,8 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
         splitType: e.split_type as "equal" | "exact" | "percentage" | "shares",
         payerId: e.paid_by as string,
         convertedMinor: Number(e.converted_amount_minor),
+        exchangeRate: Number(e.exchange_rate),
+        rateIsManual: Boolean(e.rate_is_manual),
         relativeDate: formatRelativeTime(e.date as string),
         fullDate: formatFullDate(e.date as string),
         splits: (splitsByExpense.get(e.id as string) ?? []).map((split) => {

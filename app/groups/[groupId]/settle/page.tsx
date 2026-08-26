@@ -6,16 +6,16 @@ import { SettlePlan } from "@/components/settle/settle-plan";
 import { SettleRail } from "@/components/settle/settle-rail";
 import { SimplificationChart } from "@/components/charts/simplification-chart";
 import { transferComparison } from "@/lib/analytics";
-import { getGroup } from "@/lib/server/groups";
+import { getGroup, getGroupName } from "@/lib/server/groups";
 
 export async function generateMetadata({
   params,
 }: PageProps<"/groups/[groupId]/settle">): Promise<Metadata> {
   const { groupId } = await params;
-  const group = await getGroup(groupId);
-  return {
-    title: group ? `Settle up · ${group.name}` : "Settle up · Expense Splitter",
-  };
+  // Only the name — metadata is its own render pass, so a full group load here
+  // would double the work behind every page view.
+  const name = await getGroupName(groupId);
+  return { title: name ? `Settle up · ${name}` : "Settle up · Expense Splitter" };
 }
 
 export default async function SettlePage({

@@ -56,6 +56,9 @@ export type ActivityRow =
       payerId: string;
       /** In the group's currency, when the expense was paid in another. */
       convertedMinor: number;
+      /** The rate this expense was booked at, and whether a person set it. */
+      exchangeRate: number;
+      rateIsManual: boolean;
       relativeDate: string;
       fullDate: string;
     }

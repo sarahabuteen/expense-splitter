@@ -6,10 +6,11 @@ import { RecordSettlementDialog } from "@/components/settle/record-settlement-di
 import { Avatar } from "@/components/ui/avatar";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { formatMoney, formatSignedMoney } from "@/lib/format";
-import type { GroupDetail, PlannedPayment } from "@/lib/types";
+import type { PlannedPayment } from "@/lib/types";
+import type { GroupPage } from "@/lib/server/group-page";
 
 /** The detail pane: where you stand, what to pay, and everyone's position. */
-export function BalanceRail({ group }: { group: GroupDetail }) {
+export function BalanceRail({ group }: { group: GroupPage }) {
   const settled = group.viewerSettled;
   const owed = group.yourBalanceMinor > 0;
   // Both already resolved server-side by simplifyDebts, keyed on member ids.
