@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { Breadcrumb } from "@/components/layout/breadcrumb";
 import { SettlePlan } from "@/components/settle/settle-plan";
 import { SettleRail } from "@/components/settle/settle-rail";
+import { SimplificationChart } from "@/components/charts/simplification-chart";
+import { transferComparison } from "@/lib/analytics";
 import { getGroup } from "@/lib/server/groups";
 
 export async function generateMetadata({
@@ -22,6 +24,15 @@ export default async function SettlePage({
   const { groupId } = await params;
   const group = await getGroup(groupId);
   if (!group) notFound();
+
+  const direct = [group.directPlan.yours, ...group.directPlan.others].filter(
+    (p) => p !== null,
+  );
+  const simplified = [group.plan.yours, ...group.plan.others].filter(
+    (p) => p !== null,
+  );
+  const changes = transferComparison(group.members, direct, simplified);
+  const movedMinor = direct.reduce((sum, p) => sum + p.amountMinor, 0);
 
   return (
     <main className="w-full flex-1 px-5 py-8 sm:px-7 sm:py-10">
@@ -61,8 +72,15 @@ export default async function SettlePage({
       {/* The same two-column grid as the dashboard: the plan flexes, the rail
           is fixed, and together they fill the pane instead of leaving a gap. */}
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_var(--container-detail)]">
-        <div>
+        <div className="flex flex-col gap-6">
           <SettlePlan group={group} />
+          <SimplificationChart
+            changes={changes}
+            directCount={group.planCounts.direct}
+            simplifiedCount={group.planCounts.simplified}
+            savedMinor={movedMinor}
+            currency={group.currency}
+          />
         </div>
         <aside className="lg:sticky lg:top-6 lg:self-start">
           <SettleRail group={group} />

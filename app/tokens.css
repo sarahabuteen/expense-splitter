@@ -47,6 +47,20 @@
 
   --color-focus: #2a62d6;
 
+  /* Project addition: chart series.
+     Distinct from the avatar hues on purpose — those are tuned for member
+     identity, and as adjacent data marks violet and blue are indistinguishable
+     under deuteranopia (validated ΔE 1.3). These six are the validated
+     categorical theme: worst adjacent CVD ΔE 9.1 light / 8.4 dark. */
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+  --chart-4: #eda100;
+  --chart-5: #e87ba4;
+  --chart-6: #008300;
+  --chart-other: #8b94a6;
+  --chart-grid: #e7ecf3;
+
   --font-sans: 'Manrope', system-ui, -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
 
@@ -153,6 +167,15 @@
 
     --color-focus: #5b8def;
 
+    --chart-1: #3987e5;
+    --chart-2: #d95926;
+    --chart-3: #199e70;
+    --chart-4: #c98500;
+    --chart-5: #d55181;
+    --chart-6: #008300;
+    --chart-other: #6b7280;
+    --chart-grid: #212935;
+
     --color-danger: #c62b3a;
     --color-danger-hover: #d93b4a;
     --color-danger-foreground: #ffffff;
@@ -193,6 +216,15 @@
   --color-owed-subtle: #102a22;
 
   --color-focus: #5b8def;
+
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-5: #d55181;
+  --chart-6: #008300;
+  --chart-other: #6b7280;
+  --chart-grid: #212935;
 
   --color-danger: #c62b3a;
   --color-danger-hover: #d93b4a;

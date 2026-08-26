@@ -7,6 +7,9 @@ import { CategoryIcon } from "@/components/ui/category-icon";
 import { formatMoney, formatSignedMoney } from "@/lib/format";
 import { toSearchParams, type CategoryTotal, type Filters } from "@/lib/filters";
 import type { MemberReport } from "@/lib/csv";
+import { MemberContributionChart } from "@/components/charts/member-contribution";
+import { SpendingOverTime } from "@/components/charts/spending-over-time";
+import type { MemberContribution, MonthPoint } from "@/lib/analytics";
 import type { GroupMember } from "@/lib/types";
 
 /** The ranges the spec names, plus a cleared state. */
@@ -40,6 +43,9 @@ export function GroupReports({
   currency,
   filters,
   expenseCount,
+  trend,
+  contributions,
+  categories,
 }: {
   groupId: string;
   members: GroupMember[];
@@ -49,6 +55,10 @@ export function GroupReports({
   currency: string;
   filters: Filters;
   expenseCount: number;
+  trend: MonthPoint[];
+  contributions: MemberContribution[];
+  /** The group's whole category list, so chart colours survive filtering. */
+  categories: string[];
 }) {
   const router = useRouter();
   const colorOf = new Map(members.map((m) => [m.name, m.color]));
@@ -129,6 +139,18 @@ export function GroupReports({
                   ? `${formatMoney(topContributor.paidMinor, currency)} paid`
                   : undefined
               }
+            />
+          </div>
+
+          {/* Charts before the tables: the shapes answer "how has this gone"
+              at a glance, and the tables below answer it exactly. Two equal
+              columns so neither is stretched across the pane. */}
+          <div className="grid items-start gap-6 lg:grid-cols-2">
+            <SpendingOverTime points={trend} currency={currency} />
+            <MemberContributionChart
+              contributions={contributions}
+              categories={categories}
+              currency={currency}
             />
           </div>
 

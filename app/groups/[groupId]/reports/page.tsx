@@ -7,6 +7,7 @@ import { GroupReports } from "@/components/groups/group-reports";
 import { applyFilters, categoryTotals, parseFilters } from "@/lib/filters";
 import { getGroup } from "@/lib/server/groups";
 import { memberReports } from "@/lib/csv";
+import { memberContributions, spendingOverTime } from "@/lib/analytics";
 
 export async function generateMetadata({
   params,
@@ -32,6 +33,13 @@ export default async function ReportsPage({
   const reports = memberReports(rows, group.members);
   const totals = categoryTotals(rows);
   const expenseCount = rows.filter((r) => r.kind === "expense").length;
+  const trend = spendingOverTime(rows);
+  const contributions = memberContributions(rows, group.members);
+  // Chart colours are keyed to every category the group SPENDS in, unfiltered.
+  // Filter-independent, so narrowing the view never repaints the survivors —
+  // and unlike the full predefined list, it doesn't spend slots on categories
+  // this group has never used.
+  const usedCategories = categoryTotals(group.activity).map((t) => t.category);
 
   return (
     <main className="w-full flex-1 px-5 py-8 sm:px-7 sm:py-10">
@@ -62,6 +70,9 @@ export default async function ReportsPage({
           currency={group.currency}
           filters={filters}
           expenseCount={expenseCount}
+          trend={trend}
+          contributions={contributions}
+          categories={usedCategories}
         />
       </div>
     </main>
