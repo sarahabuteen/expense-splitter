@@ -6,16 +6,9 @@
  * decimal places, so its minor and major units are the same number.
  */
 
-const CURRENCY_DECIMALS: Record<string, number> = {
-  USD: 2, EUR: 2, GBP: 2, CAD: 2, AUD: 2, CHF: 2, CNY: 2, INR: 2, MXN: 2,
-  JPY: 0,
-};
+import { decimalsFor } from "./currencies";
 
-export const SUPPORTED_CURRENCIES = Object.keys(CURRENCY_DECIMALS);
-
-export function decimalsFor(currency: string): number {
-  return CURRENCY_DECIMALS[currency.toUpperCase()] ?? 2;
-}
+export { decimalsFor, SUPPORTED_CURRENCIES } from "./currencies";
 
 /** "12.34" USD -> 1234. Throws rather than silently truncating bad input. */
 export function toMinor(amount: number | string, currency: string): number {
@@ -101,5 +94,17 @@ export function convertMinor(
 ): number {
   if (from.toUpperCase() === to.toUpperCase()) return amountMinor;
   const major = fromMinor(amountMinor, from) * rate;
-  return Math.round(major * 10 ** decimalsFor(to));
+  return roundHalfUp(major * 10 ** decimalsFor(to));
+}
+
+/**
+ * Math.round, but tolerant of binary representation error.
+ *
+ * 1.5 * 1.41 is exactly 2.115, yet in floating point it is 2.1149999999999998 —
+ * so a naive round gives 2.11 where every human (and every accountant) expects
+ * 2.12. Normalising to 12 significant digits first collapses that noise without
+ * touching values that are genuinely below the halfway point.
+ */
+function roundHalfUp(value: number): number {
+  return Math.round(Number(value.toPrecision(12)));
 }

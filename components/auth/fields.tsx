@@ -43,7 +43,7 @@ export function TextField({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium text-ink">
+      <label htmlFor={id} className="text-sm font-medium text-text-primary">
         {label}
       </label>
       <input
@@ -55,17 +55,17 @@ export function TextField({
         aria-required={required}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy || undefined}
-        className="h-11 rounded-md border border-line bg-surface px-3 text-base text-ink
-                   shadow-sm transition-colors hover:border-ink-muted/40
-                   focus:border-brand aria-[invalid=true]:border-negative"
+        className="h-11 rounded-md border border-border bg-surface px-3 text-base text-text-primary
+                   shadow-sm transition-colors hover:border-text-secondary/40
+                   focus:border-accent aria-[invalid=true]:border-owe"
       />
       {hint ? (
-        <p id={hintId} className="text-xs text-ink-muted">
+        <p id={hintId} className="text-xs text-text-secondary">
           {hint}
         </p>
       ) : null}
       {error ? (
-        <p id={errorId} role="alert" className="text-xs font-medium text-negative">
+        <p id={errorId} role="alert" className="text-xs font-medium text-owe">
           {error}
         </p>
       ) : null}
@@ -91,7 +91,7 @@ export function PasswordField({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium text-ink">
+      <label htmlFor={id} className="text-sm font-medium text-text-primary">
         {label}
       </label>
       <div className="relative">
@@ -103,9 +103,9 @@ export function PasswordField({
           aria-required={required}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy || undefined}
-          className="h-11 w-full rounded-md border border-line bg-surface ps-3 pe-12 text-base text-ink
-                     shadow-sm transition-colors hover:border-ink-muted/40
-                     focus:border-brand aria-[invalid=true]:border-negative"
+          className="h-11 w-full rounded-md border border-border bg-surface ps-3 pe-12 text-base text-text-primary
+                     shadow-sm transition-colors hover:border-text-secondary/40
+                     focus:border-accent aria-[invalid=true]:border-owe"
         />
         {/*
           A visibility toggle beats a "confirm password" field: it lets people
@@ -117,7 +117,7 @@ export function PasswordField({
           onClick={() => setVisible((v) => !v)}
           aria-pressed={visible}
           className="absolute end-1 top-1 grid h-9 w-10 place-items-center rounded
-                     text-ink-muted transition-colors hover:text-ink"
+                     text-text-secondary transition-colors hover:text-text-primary"
         >
           <span className="sr-only">
             {visible ? "Hide password" : "Show password"}
@@ -126,12 +126,12 @@ export function PasswordField({
         </button>
       </div>
       {hint ? (
-        <p id={hintId} className="text-xs text-ink-muted">
+        <p id={hintId} className="text-xs text-text-secondary">
           {hint}
         </p>
       ) : null}
       {error ? (
-        <p id={errorId} role="alert" className="text-xs font-medium text-negative">
+        <p id={errorId} role="alert" className="text-xs font-medium text-owe">
           {error}
         </p>
       ) : null}

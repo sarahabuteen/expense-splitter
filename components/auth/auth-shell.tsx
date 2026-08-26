@@ -27,20 +27,20 @@ export function AuthShell({
       <div className="relative w-full max-w-[25rem]">
         <Link
           href="/"
-          className="mx-auto mb-7 flex w-fit items-center gap-2.5 text-ink transition-opacity hover:opacity-80"
+          className="mx-auto mb-7 flex w-fit items-center gap-2.5 text-text-primary transition-opacity hover:opacity-80"
         >
-          <Logo className="size-7 text-brand" />
+          <Logo className="size-7 text-accent" />
           <span className="text-lg font-bold tracking-tight">Expense Splitter</span>
         </Link>
 
-        <div className="rounded-xl border border-line bg-surface p-6 shadow-md sm:p-7">
-          <h1 className="text-xl font-bold tracking-tight text-ink">{title}</h1>
-          <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">{subtitle}</p>
+        <div className="rounded-xl border border-border bg-surface p-6 shadow-md sm:p-7">
+          <h1 className="text-xl font-bold tracking-tight text-text-primary">{title}</h1>
+          <p className="mt-1.5 text-sm leading-relaxed text-text-secondary">{subtitle}</p>
 
           <div className="mt-6">{children}</div>
         </div>
 
-        <p className="mt-5 text-center text-sm text-ink-muted">{footer}</p>
+        <p className="mt-5 text-center text-sm text-text-secondary">{footer}</p>
       </div>
     </main>
   );
@@ -57,14 +57,14 @@ function Backdrop() {
         className="absolute inset-0 opacity-60"
         style={{
           background:
-            "radial-gradient(42rem 30rem at 15% -5%, var(--brand-soft), transparent 65%), radial-gradient(38rem 28rem at 95% 105%, var(--brand-soft), transparent 60%)",
+            "radial-gradient(42rem 30rem at 15% -5%, var(--accent-subtle), transparent 65%), radial-gradient(38rem 28rem at 95% 105%, var(--accent-subtle), transparent 60%)",
         }}
       />
       <div
         className="absolute inset-0 opacity-[0.55]"
         style={{
           backgroundImage:
-            "linear-gradient(to right, var(--line) 1px, transparent 1px), linear-gradient(to bottom, var(--line) 1px, transparent 1px)",
+            "linear-gradient(to right, var(--border) 1px, transparent 1px), linear-gradient(to bottom, var(--border) 1px, transparent 1px)",
           backgroundSize: "3.5rem 3.5rem",
           maskImage:
             "radial-gradient(28rem 22rem at 50% 45%, #000 10%, transparent 75%)",

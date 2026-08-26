@@ -33,7 +33,7 @@ export function SignInForm() {
         />
         <Link
           href="/forgot-password"
-          className="self-end text-xs font-medium text-brand underline underline-offset-2 hover:no-underline"
+          className="self-end text-xs font-medium text-accent underline underline-offset-2 hover:no-underline"
         >
           Forgot your password?
         </Link>
@@ -157,7 +157,7 @@ function SubmitButton({
       disabled={pending}
       // aria-busy rather than only a label swap, so the state is announced.
       aria-busy={pending}
-      className="h-11 rounded-md bg-brand px-4 font-semibold text-brand-ink shadow-sm
+      className="h-11 rounded-md bg-accent px-4 font-semibold text-white shadow-sm
                  transition-all hover:opacity-90 active:scale-[0.99]
                  disabled:cursor-not-allowed disabled:opacity-70 disabled:active:scale-100"
     >
@@ -175,14 +175,14 @@ function GuestAction() {
   return (
     <>
       <div className="flex items-center gap-3" aria-hidden="true">
-        <span className="h-px flex-1 bg-line" />
-        <span className="text-xs text-ink-muted">or</span>
-        <span className="h-px flex-1 bg-line" />
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-xs text-text-secondary">or</span>
+        <span className="h-px flex-1 bg-border" />
       </div>
       <Link
         href="/groups"
-        className="grid h-11 place-items-center rounded-md border border-line bg-surface
-                   px-4 font-medium text-ink transition-colors hover:bg-surface-2"
+        className="grid h-11 place-items-center rounded-md border border-border bg-surface
+                   px-4 font-medium text-text-primary transition-colors hover:bg-bg-tertiary"
       >
         Explore as a guest
       </Link>

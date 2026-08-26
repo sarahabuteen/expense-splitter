@@ -1,41 +1,25 @@
 /**
- * Member avatar colours.
+ * Member avatar colours, matching the official design.
  *
- * Ten hues, each at least 5:1 against white in light mode and 7:1 against the
- * page in dark mode. The set deliberately excludes three hue zones:
- *
- *   - teal   (~172deg) — reserved for "you're owed"
- *   - berry  (~345deg) — reserved for "you owe"
- *   - plum   (~318deg) — the brand colour
- *
- * A member whose avatar read as a balance direction would actively mislead, so
- * member identity and financial meaning never share a hue.
- *
- * The sample data in `data/sample-groups.json` ships its own `avatarColor`
- * values (emerald, teal, rose, pink, red among them) which DO collide with the
- * semantic colours. Map incoming members through `avatarColorForIndex` rather
- * than trusting the fixture's hex values.
+ * Against the near-monochrome graphite UI these are the one place colour pops,
+ * so member identity reads instantly. Balance direction is carried separately
+ * by the success/error tokens plus a sign and a verb, so a member's colour is
+ * never the thing communicating money.
  */
-
 export const AVATAR_COLORS = [
-  "clay",
-  "gold",
-  "olive",
-  "fern",
-  "steel",
-  "cobalt",
   "indigo",
+  "amber",
+  "pink",
+  "teal",
   "violet",
-  "mauve",
-  "slate",
+  "orange",
+  "cyan",
+  "emerald",
+  "rose",
+  "blue",
 ] as const;
 
 export type AvatarColor = (typeof AVATAR_COLORS)[number];
-
-/** Tailwind class for an avatar background, e.g. `bg-avatar-clay`. */
-export function avatarBgClass(color: AvatarColor): string {
-  return `bg-avatar-${color}`;
-}
 
 /**
  * Assigns the first colour not already used in the group, so small groups never

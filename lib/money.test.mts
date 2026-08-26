@@ -63,6 +63,30 @@ test("degenerate weights fall back to the priority holder", () => {
   assert.throws(() => allocate(100, [1, -1]));
 });
 
+test("three-decimal currencies (Gulf and Levant dinars)", () => {
+  // A dinar is 1000 fils. Treating these as 2-decimal would divide by ten.
+  assert.equal(decimalsFor("JOD"), 3);
+  assert.equal(decimalsFor("KWD"), 3);
+  assert.equal(decimalsFor("BHD"), 3);
+  assert.equal(decimalsFor("OMR"), 3);
+  assert.equal(toMinor(1.5, "JOD"), 1500);
+  assert.equal(toMinor("0.001", "KWD"), 1);
+  assert.equal(fromMinor(1500, "JOD"), 1.5);
+  // Precision beyond three places is still rejected
+  assert.throws(() => toMinor(1.0005, "JOD"));
+  // Splitting a dinar three ways must still reconcile exactly
+  const parts = allocate(toMinor(10, "JOD"), [1, 1, 1]);
+  assert.deepEqual(parts, [3334, 3333, 3333]);
+  assert.equal(parts.reduce((a, b) => a + b, 0), 10000);
+});
+
+test("two-decimal MENA currencies stay at two", () => {
+  assert.equal(decimalsFor("AED"), 2);
+  assert.equal(decimalsFor("SAR"), 2);
+  assert.equal(decimalsFor("EGP"), 2);
+  assert.equal(toMinor(25.5, "AED"), 2550);
+});
+
 test("conversion rounds once, at the target currency's precision", () => {
   // Fixture: ¥84,000 hotel at 0.0067 -> $562.80
   assert.equal(convertMinor(84_000, "JPY", "USD", 0.0067), 56280);
@@ -70,4 +94,8 @@ test("conversion rounds once, at the target currency's precision", () => {
   assert.equal(convertMinor(1234, "USD", "USD", 1), 1234);
   // USD -> JPY lands on whole yen
   assert.equal(convertMinor(10_00, "USD", "JPY", 149.5), 1495);
+  // USD -> JOD lands on whole fils (three places)
+  assert.equal(convertMinor(10_00, "USD", "JOD", 0.709), 7090);
+  // JOD -> USD collapses three places down to two
+  assert.equal(convertMinor(1500, "JOD", "USD", 1.41), 212);
 });

@@ -1,0 +1,196 @@
+import { Avatar } from "@/components/ui/avatar";
+import { formatMoney, formatSignedMoney } from "@/lib/format";
+import type { GroupSummary } from "@/lib/mock/groups";
+import { JAPAN_PLAN, JAPAN_VIEWER } from "@/lib/mock/activity";
+
+const SETTLED_THRESHOLD_MINOR = 1;
+
+/** The detail pane: where you stand, what to pay, and everyone's position. */
+export function BalanceRail({ group }: { group: GroupSummary }) {
+  const settled = Math.abs(group.yourBalanceMinor) <= SETTLED_THRESHOLD_MINOR;
+  const owed = group.yourBalanceMinor > 0;
+  const yours = JAPAN_PLAN.find((p) => p.isYou);
+  const others = JAPAN_PLAN.filter((p) => !p.isYou);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Card>
+        <div className="flex items-start gap-3.5">
+          <span
+            aria-hidden="true"
+            className={`grid size-10 shrink-0 place-items-center rounded-md ${
+              settled
+                ? "bg-bg-tertiary text-text-secondary"
+                : owed
+                  ? "bg-owed-subtle text-owed"
+                  : "bg-owe-subtle text-owe"
+            }`}
+          >
+            <DirectionIcon up={!owed} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm text-text-secondary">
+              {settled ? "All settled up" : owed ? "You are owed" : "You owe"}
+            </p>
+            <p
+              className={`tabular mt-1 font-mono text-xl font-semibold leading-none ${
+                settled ? "text-text-primary" : owed ? "text-owed" : "text-owe"
+              }`}
+            >
+              {formatMoney(Math.abs(group.yourBalanceMinor), group.currency)}
+            </p>
+            <p className="mt-2 text-xs text-text-secondary">
+              {settled
+                ? "Nobody owes anybody anything."
+                : owed
+                  ? "others owe you across this group"
+                  : "you owe others across this group"}
+            </p>
+          </div>
+        </div>
+
+        <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-border pt-4">
+          <div>
+            <dt className="text-xs text-text-secondary">You paid</dt>
+            <dd className="tabular mt-1 font-mono text-sm font-medium text-text-primary">
+              {formatMoney(JAPAN_VIEWER.paidMinor, group.currency)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-text-secondary">Your share</dt>
+            <dd className="tabular mt-1 font-mono text-sm font-medium text-text-primary">
+              {formatMoney(JAPAN_VIEWER.shareMinor, group.currency)}
+            </dd>
+          </div>
+        </dl>
+      </Card>
+
+      <Card>
+        <h2 className="text-sm font-semibold text-text-primary">Suggested settlements</h2>
+        <p className="mt-1 text-xs text-text-secondary">
+          A minimal set of payments to square everyone up.
+        </p>
+
+        {yours ? (
+          <div className="mt-4 flex items-center gap-3">
+            <Avatar name={yours.from} color={yours.fromColor} size="sm" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm text-text-primary">{yours.from} owes you</p>
+              <p className="tabular mt-0.5 font-mono text-sm font-medium text-owed">
+                {formatSignedMoney(yours.amountMinor, group.currency)}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="shrink-0 rounded-md border border-border bg-bg-tertiary px-3 py-1.5 text-xs font-medium text-text-primary transition-colors hover:bg-surface"
+            >
+              Record
+            </button>
+          </div>
+        ) : null}
+
+        {others.length > 0 ? (
+          <div className="mt-5 border-t border-border pt-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">
+              Others in this group
+            </h3>
+            <ul className="mt-3 flex flex-col gap-3">
+              {others.map((p) => (
+                <li key={`${p.from}-${p.to}`}>
+                  <div className="flex items-center gap-2 text-sm text-text-primary">
+                    <Avatar name={p.from} color={p.fromColor} size="sm" />
+                    <span className="truncate">{p.from}</span>
+                    <ArrowIcon />
+                    <Avatar name={p.to} color={p.toColor} size="sm" />
+                    <span className="truncate">{p.to}</span>
+                  </div>
+                  <div className="mt-1.5 flex items-center justify-between gap-3">
+                    <span className="tabular font-mono text-sm text-text-primary">
+                      {formatMoney(p.amountMinor, group.currency)}
+                    </span>
+                    <button
+                      type="button"
+                      className="text-xs font-medium text-text-secondary transition-colors hover:text-text-primary"
+                    >
+                      Settle
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </Card>
+
+      <Card>
+        <h2 className="text-sm font-semibold text-text-primary">Member balances</h2>
+        <ul className="mt-4 flex flex-col gap-3">
+          {group.members.map((m) => {
+            const isSettled = Math.abs(m.balanceMinor) <= SETTLED_THRESHOLD_MINOR;
+            return (
+              <li key={m.id} className="flex items-center gap-2.5">
+                <Avatar name={m.name} color={m.color} size="sm" />
+                <span className="min-w-0 flex-1 truncate text-sm text-text-primary">
+                  {m.name}
+                </span>
+                <span
+                  className={`tabular shrink-0 font-mono text-sm ${
+                    isSettled
+                      ? "text-text-secondary"
+                      : m.balanceMinor > 0
+                        ? "text-owed"
+                        : "text-owe"
+                  }`}
+                >
+                  {isSettled
+                    ? formatMoney(0, group.currency)
+                    : formatSignedMoney(m.balanceMinor, group.currency)}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </Card>
+    </div>
+  );
+}
+
+function Card({ children }: { children: React.ReactNode }) {
+  return (
+    <section className="rounded-lg border border-border bg-surface p-5">{children}</section>
+  );
+}
+
+function DirectionIcon({ up }: { up: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="size-[18px]"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {up ? <path d="M7 17 17 7M9 7h8v8" /> : <path d="M17 7 7 17M15 17H7V9" />}
+    </svg>
+  );
+}
+
+function ArrowIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="size-3.5 shrink-0 text-text-tertiary"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  );
+}

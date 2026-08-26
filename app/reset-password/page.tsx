@@ -23,7 +23,7 @@ export default function ResetPasswordPage() {
           Changed your mind?{" "}
           <Link
             href="/sign-in"
-            className="font-medium text-brand underline underline-offset-2"
+            className="font-medium text-accent underline underline-offset-2"
           >
             Back to sign in
           </Link>
