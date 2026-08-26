@@ -101,6 +101,12 @@ export const groupsApi = {
       method: "DELETE",
     }),
 
+  createCategory: (groupId: string, name: string) =>
+    send<{ id: string; name: string }>(`/api/groups/${groupId}/categories`, {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    }),
+
   createSettlement: (groupId: string, input: SettlementBody) =>
     send<{ id: string }>(`/api/groups/${groupId}/settlements`, {
       method: "POST",

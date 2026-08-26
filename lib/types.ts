@@ -43,6 +43,9 @@ export type ActivityRow =
         amountMinor: number;
         /** In the group's currency — what pairwise debts are computed from. */
         convertedAmountMinor: number;
+        /** Present for their own split types — needed to reopen an edit. */
+        percentage: number | null;
+        shares: number | null;
         isPayer: boolean;
       }[];
       payerId: string;
@@ -88,6 +91,8 @@ export type SettlementPlan = {
 
 export type GroupDetail = GroupSummary & {
   activity: ActivityRow[];
+  /** The nine predefined plus any this group has added. */
+  categories: string[];
   /** Who owes whom directly, before any simplification. */
   directPlan: SettlementPlan;
   viewerPaidMinor: number;

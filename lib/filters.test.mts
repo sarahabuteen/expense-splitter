@@ -18,7 +18,8 @@ const expense = (
   splitType: "equal", convertedMinor, relativeDate: "", fullDate: "",
   splits: memberIds.map((memberId) => ({
     memberId, name: memberId, color: "indigo" as const,
-    amountMinor: 0, convertedAmountMinor: 0, isPayer: memberId === payerId,
+    amountMinor: 0, convertedAmountMinor: 0,
+    percentage: null, shares: null, isPayer: memberId === payerId,
   })),
 });
 

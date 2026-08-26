@@ -138,7 +138,7 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
   const { data: allSplits } = expenseIds.length
     ? await db
         .from("expense_splits")
-        .select("expense_id, member_id, amount_minor, converted_amount_minor")
+        .select("expense_id, member_id, amount_minor, converted_amount_minor, percentage, shares")
         .in("expense_id", expenseIds)
     : { data: [] };
 
@@ -157,6 +157,11 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
   const categoryOf = new Map(
     (categories ?? []).map((c) => [c.id as string, c.name as string]),
   );
+
+  const { data: allCategories } = await db
+    .from("categories")
+    .select("name, group_id")
+    .or(`group_id.eq.${groupId},group_id.is.null`);
 
   const activity: ActivityRow[] = [
     ...(expenses ?? []).map(
@@ -183,6 +188,8 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
             color: member?.color ?? ("indigo" as const),
             amountMinor: Number(split.amount_minor),
             convertedAmountMinor: Number(split.converted_amount_minor),
+            percentage: split.percentage === null ? null : Number(split.percentage),
+            shares: split.shares === null ? null : Number(split.shares),
             isPayer: split.member_id === e.paid_by,
           };
         }),
@@ -238,6 +245,7 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
     activity,
     viewerPaidMinor,
     viewerShareMinor,
+    categories: [...new Set((allCategories ?? []).map((c) => c.name as string))].sort(),
     plan: simplifyDebts(members),
     directPlan: pairwiseDebts(members, activity),
   };

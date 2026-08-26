@@ -13,6 +13,7 @@ import {
   hasActiveFilters,
   type Filters,
 } from "@/lib/filters";
+import type { EditableExpense } from "@/components/expenses/expense-composer";
 import type { GroupDetail } from "@/lib/types";
 
 /**
@@ -22,7 +23,15 @@ import type { GroupDetail } from "@/lib/types";
  * timeline is already loaded — a round-trip per keystroke would be slower and
  * would buy nothing.
  */
-export function Ledger({ group }: { group: GroupDetail }) {
+export function Ledger({
+  group,
+  editingId,
+  onEdit,
+}: {
+  group: GroupDetail;
+  editingId: string | null;
+  onEdit: (expense: EditableExpense) => void;
+}) {
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -127,6 +136,8 @@ export function Ledger({ group }: { group: GroupDetail }) {
             groupId={group.id}
             groupCurrency={group.currency}
             canEdit={!group.isDemo}
+            editingId={editingId}
+            onEdit={onEdit}
           />
         )}
       </div>

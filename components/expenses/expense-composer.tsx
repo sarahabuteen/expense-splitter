@@ -43,26 +43,43 @@ export function ExpenseComposer({
   groupId,
   members,
   currency,
+  categories,
+  editing,
+  onCancelEdit,
 }: {
   groupId: string;
   members: GroupMember[];
   currency: string;
+  categories: string[];
+  /** When set, the composer edits this expense instead of creating one. */
+  editing?: EditableExpense | null;
+  onCancelEdit?: () => void;
 }) {
   const router = useRouter();
   const viewer = members.find((m) => m.isViewer) ?? members[0];
   const [pending, setPending] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const [expanded, setExpanded] = useState(false);
-  const [amountText, setAmountText] = useState("");
-  const [description, setDescription] = useState("");
-  const [expenseCurrency, setExpenseCurrency] = useState(currency);
-  const [payerId, setPayerId] = useState(viewer?.id ?? "");
-  const [category, setCategory] = useState("Food & Drink");
-  const [date, setDate] = useState(today());
-  const [splitType, setSplitType] = useState<SplitType>("equal");
-  const [participants, setParticipants] = useState(members.map((m) => m.id));
-  const [values, setValues] = useState<Record<string, number>>({});
+  // Callers remount this with a `key` when `editing` changes, so initialising
+  // from props is enough — no effect syncing state to props.
+  const [expanded, setExpanded] = useState(Boolean(editing));
+  const [amountText, setAmountText] = useState(() =>
+    editing ? majorString(editing.amountMinor, editing.currency) : "",
+  );
+  const [description, setDescription] = useState(editing?.title ?? "");
+  const [expenseCurrency, setExpenseCurrency] = useState(editing?.currency ?? currency);
+  const [payerId, setPayerId] = useState(editing?.payerId ?? viewer?.id ?? "");
+  const [category, setCategory] = useState(
+    editing?.category ?? categories[0] ?? "Other",
+  );
+  const [date, setDate] = useState(editing?.date ?? today());
+  const [splitType, setSplitType] = useState<SplitType>(editing?.splitType ?? "equal");
+  const [participants, setParticipants] = useState(() =>
+    editing ? editing.splits.map((s) => s.memberId) : members.map((m) => m.id),
+  );
+  const [values, setValues] = useState<Record<string, number>>(() =>
+    editing ? initialValues(editing) : {},
+  );
 
   const totalMinor = parseAmount(amountText, expenseCurrency) ?? 0;
 
@@ -142,23 +159,45 @@ export function ExpenseComposer({
       aria-label="Add an expense"
       className="rounded-lg border border-border bg-surface"
     >
+      {editing ? (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-accent-subtle px-4 py-2.5">
+          <p className="text-xs text-text-primary">
+            Editing <span className="font-medium">{editing.title}</span>
+          </p>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onCancelEdit}
+            className="h-7 px-2 text-xs"
+          >
+            Cancel
+          </Button>
+        </div>
+      ) : null}
+
       <form
         onSubmit={async (event) => {
           event.preventDefault();
           setPending(true);
           setSubmitError(null);
+          const body = {
+            description: description.trim(),
+            amountMinor: totalMinor,
+            currency: expenseCurrency,
+            date,
+            category,
+            paidBy: payerId,
+            splitType,
+            participants,
+            values,
+          };
           try {
-            await groupsApi.createExpense(groupId, {
-              description: description.trim(),
-              amountMinor: totalMinor,
-              currency: expenseCurrency,
-              date,
-              category,
-              paidBy: payerId,
-              splitType,
-              participants,
-              values,
-            });
+            if (editing) {
+              await groupsApi.updateExpense(groupId, editing.id, body);
+              onCancelEdit?.();
+            } else {
+              await groupsApi.createExpense(groupId, body);
+            }
             // Reset to the fast-path defaults so the next one is two fields again.
             setAmountText("");
             setDescription("");
@@ -166,6 +205,7 @@ export function ExpenseComposer({
             setValues({});
             setSplitType("equal");
             setParticipants(members.map((m) => m.id));
+            setExpenseCurrency(currency);
             // Server Components hold the ledger and every balance, so they
             // have to re-read for the new expense to appear.
             router.refresh();
@@ -173,7 +213,7 @@ export function ExpenseComposer({
             setSubmitError(
               err instanceof ApiError
                 ? err.requiresAuth
-                  ? "Sign in to add expenses to a group of your own."
+                  ? "Sign in to change expenses in a group of your own."
                   : err.message
                 : "Something went wrong.",
             );
@@ -237,7 +277,7 @@ export function ExpenseComposer({
               aria-busy={pending}
               className="px-5"
             >
-              {pending ? "Adding…" : "Add"}
+              {pending ? (editing ? "Saving…" : "Adding…") : editing ? "Save" : "Add"}
             </Button>
           </div>
         </div>
@@ -419,7 +459,16 @@ export function ExpenseComposer({
             ) : null}
 
             <Field label="Category">
-              <CategoryPicker value={category} onChange={setCategory} />
+              <CategoryPicker
+                value={category}
+                onChange={setCategory}
+                categories={categories}
+                onCreate={async (name) => {
+                  await groupsApi.createCategory(groupId, name);
+                  // The category list lives in a Server Component.
+                  router.refresh();
+                }}
+              />
             </Field>
 
             <div className="flex flex-col gap-3">
@@ -543,6 +592,44 @@ function ChipIcon({ path, tone }: { path: string; tone: string }) {
 
 function capitalise(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+/** Everything the composer needs to reopen an existing expense. */
+export type EditableExpense = {
+  id: string;
+  title: string;
+  amountMinor: number;
+  currency: string;
+  date: string;
+  category: string;
+  payerId: string;
+  splitType: SplitType;
+  splits: {
+    memberId: string;
+    amountMinor: number;
+    percentage: number | null;
+    shares: number | null;
+  }[];
+};
+
+/** Reopens the split in the units it was entered in, not the derived amounts. */
+function initialValues(expense: EditableExpense): Record<string, number> {
+  if (expense.splitType === "equal") return {};
+  return Object.fromEntries(
+    expense.splits.map((s) => [
+      s.memberId,
+      expense.splitType === "percentage"
+        ? (s.percentage ?? 0)
+        : expense.splitType === "shares"
+          ? (s.shares ?? 0)
+          : s.amountMinor,
+    ]),
+  );
+}
+
+function majorString(minor: number, currency: string): string {
+  const decimals = decimalsFor(currency);
+  return (minor / 10 ** decimals).toFixed(decimals);
 }
 
 function today(): string {

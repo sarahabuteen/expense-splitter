@@ -2,6 +2,7 @@
 
 import { ActivityRowItem } from "./activity-row";
 import { EmptyLedgerIllustration } from "@/components/ui/empty-illustration";
+import type { EditableExpense } from "@/components/expenses/expense-composer";
 import type { ActivityRow } from "@/lib/types";
 
 /**
@@ -16,11 +17,15 @@ export function ActivityList({
   groupId,
   groupCurrency,
   canEdit,
+  editingId,
+  onEdit,
 }: {
   rows: ActivityRow[];
   groupId: string;
   groupCurrency: string;
   canEdit: boolean;
+  editingId: string | null;
+  onEdit: (expense: EditableExpense) => void;
 }) {
   if (rows.length === 0) {
     // Sits inside the same bordered container the rows would fill, so the
@@ -46,6 +51,8 @@ export function ActivityList({
           groupId={groupId}
           groupCurrency={groupCurrency}
           canEdit={canEdit}
+          isEditing={row.id === editingId}
+          onEdit={onEdit}
         />
       ))}
     </ul>

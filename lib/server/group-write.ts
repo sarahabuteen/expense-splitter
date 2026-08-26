@@ -294,3 +294,42 @@ export async function removeMember(groupId: string, memberId: string) {
 
   return { id: memberId };
 }
+
+/** The nine that every group starts with — a custom one may not shadow them. */
+const PREDEFINED = [
+  "food & drink", "transport", "accommodation", "housing", "entertainment",
+  "shopping", "utilities", "groceries", "other",
+];
+
+export async function createCategory(groupId: string, rawName: string) {
+  const { userId } = await requireUser();
+  const db = await createRouteClient();
+  await assertWritable(db, groupId, userId);
+
+  const name = rawName.trim();
+  if (!name) throw new WriteError("Give the category a name.", 400);
+  if (name.length > 40) throw new WriteError("That name is too long.", 400);
+
+  if (PREDEFINED.includes(name.toLowerCase())) {
+    throw new WriteError(`${name} already exists.`, 409);
+  }
+
+  const { data: existing } = await db
+    .from("categories")
+    .select("id, name")
+    .eq("group_id", groupId);
+
+  if ((existing ?? []).some((c) => (c.name as string).toLowerCase() === name.toLowerCase())) {
+    throw new WriteError(`${name} already exists in this group.`, 409);
+  }
+
+  const { data, error } = await db
+    .from("categories")
+    .insert({ group_id: groupId, name, is_predefined: false })
+    .select("id, name");
+
+  if (error) throw new WriteError(error.message, 400);
+  if (!data?.length) throw notFound();
+
+  return { id: data[0].id as string, name: data[0].name as string };
+}

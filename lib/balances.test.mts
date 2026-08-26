@@ -138,7 +138,8 @@ test("direct debts net out per pair, and settlements reduce them", () => {
     splitType: "equal" as const, convertedMinor: 0, relativeDate: "", fullDate: "",
     splits: owes.map(([memberId, amount]) => ({
       memberId, name: memberId, color: "indigo" as const,
-      amountMinor: amount, convertedAmountMinor: amount, isPayer: memberId === payerId,
+      amountMinor: amount, convertedAmountMinor: amount,
+      percentage: null, shares: null, isPayer: memberId === payerId,
     })),
   });
 

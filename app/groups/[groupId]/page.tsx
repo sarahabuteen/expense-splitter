@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { notFound } from "next/navigation";
 
-import { Ledger } from "@/components/groups/ledger";
-import { ExpenseComposer } from "@/components/expenses/expense-composer";
+import { GroupWorkspace } from "@/components/groups/group-workspace";
 import { AvatarStack } from "@/components/ui/avatar";
 import { BalanceRail } from "@/components/groups/balance-rail";
 import { formatMoney } from "@/lib/format";
@@ -84,14 +83,7 @@ export default async function GroupPage({ params }: PageProps<"/groups/[groupId]
       <hr className="mt-6 border-border" />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_var(--container-detail)]">
-        <div className="flex flex-col gap-6">
-          <ExpenseComposer
-            groupId={group.id}
-            members={group.members}
-            currency={group.currency}
-          />
-          <Ledger group={group} />
-        </div>
+        <GroupWorkspace group={group} />
 
         <aside className="lg:sticky lg:top-6 lg:self-start">
           <BalanceRail group={group} />

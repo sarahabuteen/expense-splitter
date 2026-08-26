@@ -10,6 +10,7 @@ import { TrashIcon } from "@/components/ui/trash-icon";
 import { Avatar } from "@/components/ui/avatar";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { formatMoney } from "@/lib/format";
+import type { EditableExpense } from "@/components/expenses/expense-composer";
 import type { ActivityRow } from "@/lib/types";
 
 /**
@@ -54,12 +55,16 @@ export function ActivityRowItem({
   groupId,
   groupCurrency,
   canEdit,
+  isEditing,
+  onEdit,
 }: {
   row: ActivityRow;
   groupId: string;
   groupCurrency: string;
   /** False for demo groups, which nobody may write to. */
   canEdit: boolean;
+  isEditing: boolean;
+  onEdit: (expense: EditableExpense) => void;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -102,7 +107,7 @@ export function ActivityRowItem({
   return (
     <li
       className={`border-b border-border-subtle last:border-b-0 ${
-        settlement ? "bg-owed-subtle/40" : ""
+        isEditing ? "bg-accent-subtle" : settlement ? "bg-owed-subtle/40" : ""
       }`}
     >
       <button
@@ -218,6 +223,30 @@ export function ActivityRowItem({
 
               {canEdit ? (
                 <div className="mt-3 flex items-center gap-2 border-t border-border-subtle pt-3">
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      onEdit({
+                        id: row.id,
+                        title: row.title,
+                        amountMinor: row.amountMinor,
+                        currency: row.currency,
+                        date: row.date,
+                        category: row.category,
+                        payerId: row.payerId,
+                        splitType: row.splitType,
+                        splits: row.splits.map((s) => ({
+                          memberId: s.memberId,
+                          amountMinor: s.amountMinor,
+                          percentage: s.percentage,
+                          shares: s.shares,
+                        })),
+                      })
+                    }
+                    className="h-8 px-3 text-xs"
+                  >
+                    Edit
+                  </Button>
                   <Button
                     type="button"
                     variant="danger"
